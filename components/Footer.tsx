@@ -64,7 +64,7 @@ const Footer: React.FC = () => {
         <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <p className="text-xs text-gray-500">© 2025 ArenaQuest. All rights reserved.</p>
           <p className="text-xs text-gray-500">
-            Built by <a href="https://visit-adicodes.in" className="font-bold text-gray-900 hover:underline" target="_blank" rel="noopener noreferrer">Aditya Kumar</a>
+            Built by <a href="https://www.adicodes.in/" className="font-bold text-gray-900 hover:underline" target="_blank" rel="noopener noreferrer">Aditya Kumar</a>
           </p>
         </div>
       </div>
