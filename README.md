@@ -138,3 +138,9 @@ npm run firebase:deploy
 ```
 
 ### Available Firebase Scripts
+
+## 👩‍💻 Developer
+
+- Name: Aditya Kumar
+- Role: Frontend Engineer
+- Contact: 

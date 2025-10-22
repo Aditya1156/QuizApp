@@ -61,9 +61,12 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <div className="border-t border-gray-200 py-4 bg-white">
-         <p className="text-xs text-center text-gray-500">
-          © 2025 ArenaQuest. All rights reserved.
-        </p>
+        <div className="container mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="text-xs text-gray-500">© 2025 ArenaQuest. All rights reserved.</p>
+          <p className="text-xs text-gray-500">
+            Built by <a href="https://visit-adicodes.in" className="font-bold text-gray-900 hover:underline" target="_blank" rel="noopener noreferrer">Aditya Kumar</a>
+          </p>
+        </div>
       </div>
     </footer>
   );
