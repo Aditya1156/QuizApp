@@ -5,6 +5,7 @@ import Button from '../components/Button';
 import Input from '../components/Input';
 import AdminSidebar from '../components/AdminSidebar';
 import { Question } from '../types';
+import { useToast } from '../hooks/useToast';
 import { GoogleGenAI, Type } from "@google/genai";
 
 interface AdminDashboardScreenProps {
@@ -18,6 +19,8 @@ const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ setScreen }
   const [activeNav, setActiveNav] = useState('admin_dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { createRoom } = useQuiz();
+  const { cancelQuiz } = useQuiz();
+  const { showToast } = useToast();
   const [quizName, setQuizName] = useState('');
   const [mode, setMode] = useState<QuizMode>('option-only');
   const [numQuestions, setNumQuestions] = useState(5);
@@ -730,6 +733,24 @@ const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ setScreen }
             <div className="pt-4">
               <Button onClick={handleCreateRoom} variant="primary" className="!w-full !py-5 !text-xl !font-black">
                 🚀 Create Room - {numQuestions} Question{numQuestions > 1 ? 's' : ''}
+              </Button>
+            </div>
+          
+            {/* Cancel Quiz Button - only relevant when a room is active */}
+            <div className="pt-4">
+              <Button
+                onClick={() => {
+                  const confirmCancel = window.confirm('Are you sure you want to cancel this quiz? This will end the session for all participants.');
+                  if (!confirmCancel) return;
+                  const msg = window.prompt('Optional cancellation message for participants (leave empty for none):');
+                  cancelQuiz(msg ?? undefined);
+                  showToast('Quiz cancelled. Participants have been notified.', 'info');
+                  setScreen('home');
+                }}
+                variant="danger"
+                className="!w-full !py-4 !text-lg !font-bold mt-2"
+              >
+                ❌ Cancel Quiz
               </Button>
             </div>
             

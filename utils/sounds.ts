@@ -20,7 +20,7 @@ class SoundManager {
       tick: '/sounds/tick.mp3',
       countdown: '/sounds/countdown.mp3',
       applause: '/sounds/applause.mp3',
-      whoosh: '/sounds/whoose.mp3', // Note: file is named 'whoose.mp3'
+      whoosh: '/sounds/whoosh.mp3',
       join: '/sounds/join.mp3',
     };
 
@@ -30,6 +30,38 @@ class SoundManager {
       audio.preload = 'auto';
       this.sounds.set(key, audio);
     });
+  }
+
+  // Try to unlock audio on browsers that require a user gesture
+  async unlock() {
+    try {
+      // Try WebAudio API resume
+      const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        if (ctx.state === 'suspended') {
+          await ctx.resume();
+        }
+        // create a short silent oscillator to ensure audio is unlocked
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        const osc = ctx.createOscillator();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.01);
+      }
+
+      // Also try to play a tiny buffered audio element to prompt permission
+      const test = new Audio();
+      test.src = '';
+      // calling play without src will likely do nothing, but attempt to call it to satisfy gestures
+      try { await test.play(); } catch (e) { /* ignore */ }
+      return true;
+    } catch (err) {
+      console.warn('Audio unlock failed', err);
+      return false;
+    }
   }
 
   play(soundName: string) {

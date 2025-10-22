@@ -13,8 +13,8 @@ const Button: React.FC<ButtonProps> = ({
   className = '', 
   ...props 
 }) => {
-  // Base classes - rounded buttons with modern shadow
-  const baseClasses = "w-full font-bold rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg";
+  // Base classes - inline-flex so buttons size to content by default; callers can force full width with `!w-full`
+  const baseClasses = "inline-flex items-center justify-center font-bold rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg whitespace-nowrap";
   
   // Size classes - standard heights for touch targets
   const sizeClasses = {
