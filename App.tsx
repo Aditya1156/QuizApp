@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QuizProvider, Screen, UserRole } from './hooks/useQuiz';
 import { AuthProvider } from './hooks/useAuth';
 import { ToastProvider } from './hooks/useToast';
@@ -19,7 +19,20 @@ import PixelBlast from './components/PixelBlast';
 import SoundToggle from './components/SoundToggle';
 
 function AppContent() {
-  const [screen, setScreen] = useState<Screen>('landing');
+  // Read the room param synchronously so initial render can go to the join screen
+  let initialRoom: string | null = null;
+  try {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const room = params.get('room');
+      if (room && room.trim()) initialRoom = room.trim().toUpperCase();
+    }
+  } catch (e) {
+    console.error('Error reading initial room from URL', e);
+  }
+
+  const [screen, setScreen] = useState<Screen>(initialRoom ? 'student_join' : 'landing');
+  const [initialRoomCode] = useState<string | null>(initialRoom);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -38,7 +51,7 @@ function AppContent() {
       case 'admin_dashboard':
         return <AdminDashboardScreen setScreen={setScreen} />;
       case 'student_join':
-        return <StudentJoinScreen setScreen={setScreen} />;
+        return <StudentJoinScreen setScreen={setScreen} initialRoomCode={initialRoomCode ?? undefined} />;
       case 'lobby':
         return <LobbyScreen setScreen={setScreen} userRole={userRole} />;
       case 'quiz':
@@ -107,7 +120,7 @@ function AppContent() {
         {!isStudentQuiz && <Footer />}
       </div>
       
-      <SoundToggle />
+  {/* Sound toggle moved into Header for a small inline control */}
     </div>
   );
 }

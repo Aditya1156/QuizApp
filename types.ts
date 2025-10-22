@@ -26,6 +26,8 @@ export interface QuizRoom {
   id: string;
   name: string;
   code: string;
+  // a sharable live link to join the room (optional)
+  liveLink?: string;
   // mode of the quiz: option-only for multiple-choice; other modes can be added later
   mode?: 'option-only' | string;
   questions: Question[];
@@ -38,6 +40,7 @@ export interface QuizRoom {
   answersRevealed?: boolean; // whether the admin has revealed correct answers
   questionStartTime?: number | null; // epoch ms when current question was opened
   questionTimer?: number | null; // time limit in seconds for the current question
+  canceledMessage?: string | null; // optional message when admin cancels the quiz
 }
 
 export interface QuizContextType {
@@ -52,6 +55,7 @@ export interface QuizContextType {
   nextQuestion: () => void;
   submitAnswer: (studentId: string, questionId: number, selectedOption: number, timeTaken: number) => void;
   endQuiz: () => void;
+  cancelQuiz: (message?: string) => void;
   getStudentResponses: (studentId: string) => Response[];
   getScores: () => { studentId: string; name: string; score: number; totalTime: number }[];
 }

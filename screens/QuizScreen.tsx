@@ -58,6 +58,22 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quizRoom?.currentQuestionIndex, quizRoom?.status]);
 
+  // If admin cancels the quiz with a message, show it to students and redirect
+  useEffect(() => {
+    if (quizRoom?.canceledMessage) {
+      // Show cancellation message to everyone
+      showToast(quizRoom.canceledMessage, 'info', 5000);
+      // Give students a moment to read then navigate them away
+      setTimeout(() => {
+        if (userRole === 'student') {
+          setScreen('home');
+        } else if (userRole === 'admin') {
+          setScreen('admin_dashboard');
+        }
+      }, 1800);
+    }
+  }, [quizRoom?.canceledMessage]);
+
   // Show reveal animation when answers are revealed
   useEffect(() => {
     const currentQIndex = quizRoom?.currentQuestionIndex ?? -1;
@@ -195,13 +211,13 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
       return { count, percentage };
     });
 
-     return (
-      <div className="w-full max-w-6xl p-8 bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-3xl shadow-2xl animate-fade-in-up">
+    return (
+      <div className="w-full max-w-6xl p-8 bg-white border-2 border-gray-200 rounded-3xl shadow-2xl animate-fade-in-up">
         {/* Header with Mode Badge */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-2xl flex items-center justify-center shadow-lg">
-              <Target className="w-7 h-7 text-white" />
+            <div className="w-14 h-14 bg-yellow-400 rounded-2xl flex items-center justify-center shadow-lg">
+              <Target className="w-7 h-7 text-gray-900" />
             </div>
             <div>
               <h1 className="text-3xl font-black text-gray-900 flex items-center gap-2">
@@ -226,7 +242,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
               </span>
             )}
             {quizRoom.answersRevealed && (
-              <span className="bg-purple-500 text-white px-4 py-2 rounded-full font-semibold shadow-lg flex items-center gap-2">
+              <span className="bg-cyan-200 text-gray-900 px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-2">
                 <Eye className="w-4 h-4" />
                 REVEALED
               </span>
@@ -245,15 +261,15 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
-            <div 
-              className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-4 rounded-full transition-all duration-500 shadow-lg" 
+            <div
+              className="bg-yellow-400 h-4 rounded-full transition-all duration-500 shadow-md"
               style={{ width: `${progressPercentage}%` }}
-            ></div>
+            />
           </div>
         </div>
 
         {/* Question Display */}
-        <div className="bg-gradient-to-br from-yellow-50 to-white p-8 rounded-2xl mb-6 border-2 border-yellow-400/40 shadow-lg">
+  <div className="bg-yellow-50 p-8 rounded-2xl mb-6 border-2 border-yellow-200 shadow-md">
           <div className="flex items-start gap-4 mb-6">
             <div className="w-12 h-12 bg-yellow-400 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md">
               <Hash className="w-6 h-6 text-white" />
@@ -339,11 +355,11 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
         </div>
 
         {/* Response Statistics */}
-        <div className="bg-gradient-to-br from-purple-50 to-white p-6 rounded-2xl mb-6 border-2 border-purple-400/40 shadow-lg">
+        <div className="bg-gray-50 p-6 rounded-2xl mb-6 border-2 border-gray-200 shadow-md">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center shadow-md">
-                <BarChart3 className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 bg-cyan-200 rounded-xl flex items-center justify-center shadow-sm">
+                <BarChart3 className="w-5 h-5 text-gray-900" />
               </div>
               <div>
                 <h3 className="text-lg font-black text-gray-900">Response Tracker</h3>
@@ -359,10 +375,10 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
                 <div className="text-sm font-semibold text-gray-600">Students Answered</div>
               </div>
               <div className="w-40 bg-gray-200 rounded-full h-4 shadow-inner">
-                <div 
-                  className="bg-gradient-to-r from-purple-400 to-purple-500 h-4 rounded-full transition-all duration-500 shadow-md"
+                <div
+                  className="bg-cyan-400 h-4 rounded-full transition-all duration-500 shadow-sm"
                   style={{ width: `${responseRate}%` }}
-                ></div>
+                />
               </div>
             </div>
           </div>
@@ -370,7 +386,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
           {responseCount > 0 && (
             <div className="grid grid-cols-4 gap-3 mt-4">
               {optionStats.map((stat, idx) => (
-                <div key={idx} className={`p-3 rounded-xl ${optionConfig[idx].bg}/10 border-2 ${optionConfig[idx].border}/30`}>
+                <div key={idx} className={`p-3 rounded-xl bg-white border-2 border-gray-100`}>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-2xl">{optionConfig[idx].symbol}</span>
                     <span className="text-sm font-black text-gray-700">Option {optionConfig[idx].label}</span>
@@ -423,7 +439,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
             }} 
             variant="secondary"
             disabled={quizRoom.answersRevealed}
-            className="!w-full !bg-purple-500 hover:!bg-purple-600 !text-white !shadow-lg"
+            className="!w-full !bg-cyan-200 hover:!bg-cyan-300 !text-gray-900 !shadow-md"
           >
             <span className="flex flex-col items-center gap-1">
               <Eye className="w-6 h-6" />
@@ -438,7 +454,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
               playSound('whoosh');
             }} 
             variant="secondary" 
-            className="!w-full !bg-indigo-500 hover:!bg-indigo-600 !text-white !shadow-lg"
+            className="!w-full !bg-gray-100 hover:!bg-gray-200 !text-gray-900 !shadow-md"
           >
             <span className="flex flex-col items-center gap-1">
               <Trophy className="w-6 h-6" />
@@ -452,7 +468,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
               adminAdvance();
               playSound('whoosh');
             }} 
-            className="!w-full !bg-gradient-to-r !from-yellow-400 !to-yellow-500 hover:!from-yellow-500 hover:!to-yellow-600 !shadow-xl !scale-105"
+            className="!w-full !bg-yellow-400 hover:!bg-yellow-500 !text-gray-900 !shadow-xl"
           >
             <span className="flex flex-col items-center gap-1">
               {quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? (
@@ -471,7 +487,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
         </div>
 
         {/* Keyboard Shortcuts Help */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+  <div className="mt-6 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
           <div className="flex items-center gap-3 mb-2">
             <Keyboard className="w-5 h-5 text-gray-700" />
             <span className="text-sm font-bold text-gray-700">Keyboard Shortcuts:</span>
@@ -616,7 +632,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
 
       {/* Answer Reveal Modal - Student View */}
       {showRevealAnimation && selectedOption !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-fade-in p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4">
           <div className={`relative max-w-lg sm:max-w-2xl w-full mx-4 p-6 sm:p-12 rounded-3xl shadow-2xl transform transition-all duration-500 ${
             selectedOption === currentQuestion.correctOption 
               ? 'bg-green-500 animate-bounce-in scale-110' 
@@ -676,7 +692,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
             {/* Close button */}
             <button
               onClick={() => setShowRevealAnimation(false)}
-              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-white/80 hover:text-white text-2xl sm:text-3xl font-bold w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-black/20 hover:bg-black/40 transition-all flex items-center justify-center"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-gray-800 hover:text-gray-900 text-2xl sm:text-3xl font-bold w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-100 hover:bg-gray-200 transition-all flex items-center justify-center"
             >
               ×
             </button>

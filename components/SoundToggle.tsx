@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { toggleSound, isSoundEnabled } from '../utils/sounds';
 
-const SoundToggle: React.FC = () => {
+interface SoundToggleProps {
+  className?: string;
+  size?: 'sm' | 'md';
+}
+
+const SoundToggle: React.FC<SoundToggleProps> = ({ className, size = 'md' }) => {
   const [enabled, setEnabled] = useState(isSoundEnabled());
 
   const handleToggle = () => {
@@ -9,19 +14,22 @@ const SoundToggle: React.FC = () => {
     setEnabled(newState);
   };
 
+  const baseClass = className ?? 'fixed bottom-4 left-4 z-40 p-3 rounded-full bg-white/90 hover:bg-yellow-50 border-2 border-gray-200 hover:border-yellow-400 transition-all hover:scale-110 shadow-lg backdrop-blur-sm';
+  const iconSize = size === 'sm' ? 'w-4 h-4' : 'w-6 h-6';
+
   return (
     <button
       onClick={handleToggle}
-      className="fixed bottom-4 left-4 z-40 p-3 rounded-full bg-white/90 hover:bg-yellow-50 border-2 border-gray-200 hover:border-yellow-400 transition-all hover:scale-110 shadow-lg backdrop-blur-sm"
+      className={baseClass}
       title={enabled ? 'Mute sounds' : 'Enable sounds'}
       aria-label={enabled ? 'Mute sounds' : 'Enable sounds'}
     >
       {enabled ? (
-        <svg className="w-6 h-6 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+        <svg className={`${iconSize} ${size === 'sm' ? 'text-yellow-500' : 'text-yellow-500'}`} fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
         </svg>
       ) : (
-        <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+        <svg className={`${iconSize} ${size === 'sm' ? 'text-gray-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM12.293 7.293a1 1 0 011.414 0L15 8.586l1.293-1.293a1 1 0 111.414 1.414L16.414 10l1.293 1.293a1 1 0 01-1.414 1.414L15 11.414l-1.293 1.293a1 1 0 01-1.414-1.414L13.586 10l-1.293-1.293a1 1 0 010-1.414z" clipRule="evenodd" />
         </svg>
       )}

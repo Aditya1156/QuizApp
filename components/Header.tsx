@@ -3,6 +3,7 @@ import { QuizIcon } from './icons/QuizIcon';
 import { Screen } from '../hooks/useQuiz';
 import { useAuth } from '../hooks/useAuth';
 import Button from './Button';
+import SoundToggle from './SoundToggle';
 
 interface HeaderProps {
   screen: Screen;
@@ -124,8 +125,12 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
                 <span className="ml-1">→</span>
               </Button>
             </div>
-          ) : (
+              ) : (
             <div className="flex items-center space-x-3 lg:space-x-4">
+              {/* Small inline sound toggle */}
+              <div className="hidden md:block">
+                <SoundToggle size="sm" className="p-2 w-9 h-9 bg-white/90 border-2 border-gray-200 hover:border-yellow-400" />
+              </div>
               {/* Prev / Next navigation */}
               <div className="hidden md:flex items-center gap-2">
                 <button
@@ -245,12 +250,12 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-2 lg:gap-3">
+                <div className="flex items-center gap-3 lg:gap-4">
                   <Button 
                     onClick={() => setScreen('admin_login')} 
                     variant="outline"
                     size="sm"
-                    className="hidden sm:flex !border-2 !border-gray-900 !text-gray-900 hover:!bg-gray-900 hover:!text-white font-bold"
+                    className="hidden sm:flex !border-2 !border-gray-900 !text-gray-900 hover:!bg-gray-900 hover:!text-white font-bold bg-white relative z-20"
                   >
                     Login
                   </Button>
@@ -258,7 +263,7 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
                     onClick={() => setScreen('home')} 
                     variant="primary"
                     size="sm"
-                    className="shadow-xl hover:shadow-2xl !bg-gradient-to-r !from-yellow-400 !to-yellow-500 hover:!from-yellow-500 hover:!to-yellow-600 font-black"
+                    className="relative z-10 shadow-xl hover:shadow-2xl !bg-gradient-to-r !from-yellow-400 !to-yellow-500 hover:!from-yellow-500 hover:!to-yellow-600 font-black"
                   >
                     <span className="hidden sm:inline">Get Started</span>
                     <span className="sm:hidden">Start</span>

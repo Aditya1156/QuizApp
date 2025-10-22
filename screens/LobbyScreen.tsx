@@ -3,6 +3,7 @@ import { useQuiz } from '../hooks/useQuiz';
 import { Screen, UserRole } from '../hooks/useQuiz';
 import Button from '../components/Button';
 import { playSound } from '../utils/sounds';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface LobbyScreenProps {
   setScreen: (screen: Screen) => void;
@@ -15,7 +16,11 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
   const [copySuccess, setCopySuccess] = useState(false);
   const [readyPlayers, setReadyPlayers] = useState<Set<string>>(new Set());
   const [showQuizPreview, setShowQuizPreview] = useState(false);
-  const roomLink = typeof window !== 'undefined' ? `${window.location.origin}?room=${quizRoom?.code ?? ''}` : '';
+  const roomLink = React.useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const base = `${window.location.origin}${window.location.pathname}`;
+    return quizRoom?.code ? `${base}?room=${quizRoom.code}` : `${base}`;
+  }, [quizRoom?.code]);
 
   React.useEffect(() => {
     console.log('LobbyScreen mounted, userRole:', userRole, 'quizRoom:', quizRoom);
@@ -125,6 +130,25 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
             <p className="text-4xl sm:text-6xl font-mono font-black tracking-widest text-gray-900 animate-pulse mb-3">
               {quizRoom.code}
             </p>
+            
+            {/* QR Code for Admin */}
+            {userRole === 'admin' && (
+              <div className="flex justify-center mb-4">
+                <div className="bg-white p-4 rounded-2xl border-4 border-yellow-400 shadow-lg">
+                  <QRCodeSVG
+                    key={quizRoom?.code ?? 'no-code'}
+                    value={roomLink}
+                    size={180}
+                    level="H"
+                    includeMargin={true}
+                    fgColor="#111827"
+                    bgColor="#FFFFFF"
+                  />
+                  <p className="text-xs text-gray-600 text-center mt-2 font-semibold">Scan to join instantly 📱</p>
+                </div>
+              </div>
+            )}
+            
             <div className="flex gap-2 justify-center flex-wrap">
               <button
                 onClick={handleCopyCode}

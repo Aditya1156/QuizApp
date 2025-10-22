@@ -5,7 +5,6 @@ import Card from '../components/Card';
 import { CreativePricing, PricingTier } from '../components/ui/creative-pricing';
 import { Sparkles, Zap, Users, Building2 } from 'lucide-react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 interface PricingScreenProps {
   setScreen: (screen: Screen) => void;
@@ -283,9 +282,7 @@ const PricingScreen: React.FC<PricingScreenProps> = ({ setScreen }) => {
           </Button>
         </div>
       </div>
-      </div>
-      
-      <Footer />
+  </div>
     </div>
   );
 };

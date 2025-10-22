@@ -61,7 +61,14 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ setScreen }) => {
               Get Started 🚀
             </Button>
             <Button onClick={() => setScreen('pricing' as Screen)} variant="outline" size="lg">
-              View Pricing �
+              <span className="flex items-center gap-3">
+                <span>View Pricing</span>
+                {/* Small inline logo SVG */}
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="inline-block">
+                  <circle cx="12" cy="12" r="10" fill="#FBBF24" />
+                  <path d="M7 12l3 3 7-7" stroke="#081229" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
             </Button>
           </div>
         </div>

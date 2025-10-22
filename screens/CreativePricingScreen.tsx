@@ -3,7 +3,6 @@ import { Screen } from '../hooks/useQuiz';
 import { CreativePricing, PricingTier } from '../components/ui/creative-pricing';
 import { Sparkles, Zap, Users, Building2 } from 'lucide-react';
 import Header from '../components/Header';
-import Footer from '../components/Footer';
 
 interface CreativePricingScreenProps {
   setScreen: (screen: Screen) => void;
@@ -119,9 +118,7 @@ const CreativePricingScreen: React.FC<CreativePricingScreenProps> = ({ setScreen
             </div>
           </div>
         </div>
-      </div>
-
-      <Footer />
+  </div>
     </div>
   );
 };

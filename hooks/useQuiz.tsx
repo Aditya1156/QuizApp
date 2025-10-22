@@ -42,6 +42,8 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       id: Date.now().toString(),
       name,
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
+      // liveLink will be filled in when available (window may be undefined in some SSR contexts)
+      liveLink: typeof window !== 'undefined' ? `${window.location.origin}?room=${Math.random().toString(36).substring(2, 8).toUpperCase()}` : undefined,
       mode: mode ?? 'option-only',
       questions,
       status: 'waiting',
@@ -282,6 +284,16 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return updated;
     });
   };
+
+  // Admin: cancel the quiz session and optionally broadcast a message to students
+  const cancelQuiz = (message?: string) => {
+    setQuizRoom(prev => {
+      if (!prev) return null;
+      const updated: QuizRoom = { ...prev, status: 'ended', canceledMessage: message ?? null };
+      dbUpdate(`/rooms/${updated.id}`, { status: updated.status, canceledMessage: updated.canceledMessage }).catch(console.error);
+      return updated;
+    });
+  };
   
   const getStudentResponses = (studentId: string) => {
     return quizRoom?.responses.filter(r => r.studentId === studentId) || [];
@@ -298,7 +310,7 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <QuizContext.Provider value={{ quizRoom, createRoom, joinRoom, startQuiz, openQuestion, closeQuestion, revealAnswers, adminAdvance, nextQuestion, submitAnswer, endQuiz, getStudentResponses, getScores }}>
+    <QuizContext.Provider value={{ quizRoom, createRoom, joinRoom, startQuiz, openQuestion, closeQuestion, revealAnswers, adminAdvance, nextQuestion, submitAnswer, endQuiz, cancelQuiz, getStudentResponses, getScores }}>
       {children}
     </QuizContext.Provider>
   );
