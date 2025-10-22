@@ -17,6 +17,8 @@ interface QuizScreenProps {
 const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
   const { quizRoom, nextQuestion, submitAnswer, openQuestion, closeQuestion, revealAnswers, adminAdvance, getScores } = useQuiz();
   const { showToast } = useToast();
+  // helper to avoid TypeScript narrowing issues when checking role in closures
+  const isRole = (r: 'admin' | 'student') => userRole === r;
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [startTime, setStartTime] = useState(Date.now());
@@ -29,7 +31,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
   const currentQuestion = quizRoom?.questions[quizRoom.currentQuestionIndex];
 
   useEffect(() => {
-    if (userRole === 'student') {
+    if (isRole('student')) {
       const storedStudent = sessionStorage.getItem('quizStudent');
       if (storedStudent) {
         setStudent(JSON.parse(storedStudent));
@@ -65,22 +67,24 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
       showToast(quizRoom.canceledMessage, 'info', 5000);
       // Give students a moment to read then navigate them away
       setTimeout(() => {
-        if (userRole === 'student') {
+        if (isRole('student')) {
           setScreen('home');
-        } else if (userRole === 'admin') {
+        } else if (isRole('admin')) {
           setScreen('admin_dashboard');
         }
       }, 1800);
     }
   }, [quizRoom?.canceledMessage]);
 
-  // Show reveal animation when answers are revealed
+  // Show reveal animation when answers are revealed (for students who answered OR didn't answer)
   useEffect(() => {
     const currentQIndex = quizRoom?.currentQuestionIndex ?? -1;
-    if (quizRoom?.answersRevealed && userRole === 'student' && isAnswered && leaderboardShownForQuestion !== currentQIndex) {
+    if (quizRoom?.answersRevealed && isRole('student') && leaderboardShownForQuestion !== currentQIndex) {
       setShowRevealAnimation(true);
       // Play sound based on correctness
-      if (selectedOption === currentQuestion?.correctOption) {
+      if (selectedOption === -1) {
+        playSound('wrong'); // Not attempted sound
+      } else if (selectedOption === currentQuestion?.correctOption) {
         playSound('correct');
       } else {
         playSound('wrong');
@@ -99,12 +103,12 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [quizRoom?.answersRevealed, quizRoom?.currentQuestionIndex, userRole, isAnswered, leaderboardShownForQuestion, selectedOption, currentQuestion]);
+  }, [quizRoom?.answersRevealed, quizRoom?.currentQuestionIndex, userRole, leaderboardShownForQuestion, selectedOption, currentQuestion]);
 
   // Show leaderboard for admin immediately after reveal
   useEffect(() => {
     const currentQIndex = quizRoom?.currentQuestionIndex ?? -1;
-    if (quizRoom?.answersRevealed && userRole === 'admin' && leaderboardShownForQuestion !== currentQIndex) {
+  if (quizRoom?.answersRevealed && isRole('admin') && leaderboardShownForQuestion !== currentQIndex) {
       const timer = setTimeout(() => {
         setShowLiveLeaderboard(true);
         setLeaderboardShownForQuestion(currentQIndex);
@@ -114,24 +118,58 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
   }, [quizRoom?.answersRevealed, quizRoom?.currentQuestionIndex, userRole, leaderboardShownForQuestion]);
 
   const handleOptionClick = (index: number) => {
-    if (isAnswered || userRole !== 'student') return;
-    if (!quizRoom?.acceptingAnswers) return; // only allow when admin opened the question
+    console.log('=== handleOptionClick called ===');
+    console.log('Option clicked:', { 
+      index, 
+      isAnswered, 
+      userRole, 
+      isStudent: isRole('student'),
+      acceptingAnswers: quizRoom?.acceptingAnswers,
+      student,
+      currentQuestion: currentQuestion?.id
+    });
     
+    if (isAnswered) {
+      console.log('❌ Blocked: Already answered');
+      showToast('You have already submitted your answer!', 'info');
+      return;
+    }
+    
+    if (!isRole('student')) {
+      console.log('❌ Blocked: Not a student (userRole:', userRole, ')');
+      showToast('Only students can select answers!', 'info');
+      return;
+    }
+    
+    if (!quizRoom?.acceptingAnswers) {
+      console.log('❌ Blocked: Quiz not accepting answers');
+      showToast('Wait for the host to open the question!', 'info');
+      return;
+    }
+    
+    if (!student) {
+      console.log('❌ Blocked: No student data found');
+      showToast('Student information not found. Please rejoin.', 'error');
+      return;
+    }
+    
+    console.log('✅ Processing answer for option:', index);
     const timeTaken = (Date.now() - startTime) / 1000;
     setSelectedOption(index);
     setIsAnswered(true);
 
-    if (student && currentQuestion) {
+    if (currentQuestion) {
+      console.log('Submitting answer to database...');
       submitAnswer(student.id, currentQuestion.id, index, timeTaken);
       showToast('Answer submitted!', 'success');
-      playSound('join'); // Play join sound when answer is submitted
+      playSound('join');
     }
   };
 
   // Keyboard shortcuts: 1-4 for options (students). Admin shortcuts: Enter -> reveal, N -> next, O -> open, C -> close
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!quizRoom || !currentQuestion) return;
-    if (userRole === 'student' && !isAnswered && quizRoom.acceptingAnswers) {
+    if (isRole('student') && !isAnswered && quizRoom.acceptingAnswers) {
       const key = e.key;
       if (['1','2','3','4'].includes(key)) {
         const idx = parseInt(key, 10) - 1;
@@ -139,7 +177,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
       }
     }
 
-    if (userRole === 'admin') {
+    if (isRole('admin')) {
       if (e.key === 'Enter' && !quizRoom.answersRevealed) {
         // reveal answers
         revealAnswers();
@@ -164,7 +202,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
   }, [handleKeyDown]);
   
   const handleTimeUp = () => {
-    if (isAnswered || userRole !== 'student') return;
+    if (isAnswered || !isRole('student')) return;
     // on time up students are no longer allowed to answer; admin should close or reveal
     setIsAnswered(true);
     if (student && currentQuestion) {
@@ -191,7 +229,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
 
   const progressPercentage = ((quizRoom.currentQuestionIndex + 1) / quizRoom.questions.length) * 100;
   
-  if (userRole === 'admin') {
+  if (isRole('admin')) {
     const optionConfig = [
       { label: 'A', color: 'red', bg: 'bg-red-500', border: 'border-red-600', symbol: '●' },
       { label: 'B', color: 'yellow', bg: 'bg-yellow-400', border: 'border-yellow-500', symbol: '■' },
@@ -399,94 +437,106 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
           )}
         </div>
 
-        {/* Control Panel */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          <Button 
+        {/* Control Panel - responsive grid toolbar with card-style buttons */}
+        <div role="toolbar" aria-label="Quiz host controls" className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+          <button
             onClick={() => {
               openQuestion(undefined, currentQuestion.timeLimit);
               playSound('countdown');
-            }} 
+            }}
             disabled={quizRoom.acceptingAnswers}
-            className="!w-full !bg-green-500 hover:!bg-green-600 !shadow-lg"
+            aria-label={`Open question for ${currentQuestion.timeLimit} seconds`}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-green-50 hover:bg-green-100 text-green-600 border-2 border-green-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="flex flex-col items-center gap-1">
-              <Play className="w-6 h-6" />
-              <span className="text-xs">Open</span>
-              <span className="text-[10px] opacity-75">{currentQuestion.timeLimit}s</span>
-            </span>
-          </Button>
-          
-          <Button 
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm flex-shrink-0">
+              <Play className="w-6 h-6 text-green-600" aria-hidden />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <span className="font-bold text-base block text-green-600">Open</span>
+              <span className="text-xs text-green-500 opacity-80">{currentQuestion.timeLimit}s</span>
+            </div>
+          </button>
+
+          <button
             onClick={() => {
               closeQuestion();
               playSound('whoosh');
-            }} 
-            variant="secondary" 
+            }}
             disabled={!quizRoom.acceptingAnswers}
-            className="!w-full !shadow-lg"
+            aria-label="Close question (stop answers)"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-gray-50 hover:bg-gray-100 text-gray-600 border-2 border-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="flex flex-col items-center gap-1">
-              <Pause className="w-6 h-6" />
-              <span className="text-xs">Close</span>
-              <span className="text-[10px] opacity-75">Stop Answers</span>
-            </span>
-          </Button>
-          
-          <Button 
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm flex-shrink-0">
+              <Pause className="w-6 h-6 text-gray-600" aria-hidden />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <span className="font-bold text-base block text-gray-600">Close</span>
+              <span className="text-xs text-gray-500 opacity-80">Stop</span>
+            </div>
+          </button>
+
+          <button
             onClick={() => {
               revealAnswers();
               playSound('success');
-            }} 
-            variant="secondary"
+            }}
             disabled={quizRoom.answersRevealed}
-            className="!w-full !bg-cyan-200 hover:!bg-cyan-300 !text-gray-900 !shadow-md"
+            aria-label="Reveal answers"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-cyan-50 hover:bg-cyan-100 text-cyan-600 border-2 border-cyan-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="flex flex-col items-center gap-1">
-              <Eye className="w-6 h-6" />
-              <span className="text-xs font-black">Reveal</span>
-              <span className="text-[10px] opacity-75">Show Answer</span>
-            </span>
-          </Button>
-          
-          <Button 
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm flex-shrink-0">
+              <Eye className="w-6 h-6 text-cyan-600" aria-hidden />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <span className="font-bold text-base block text-cyan-600">Reveal</span>
+              <span className="text-xs text-cyan-500 opacity-80">Answer</span>
+            </div>
+          </button>
+
+          <button
             onClick={() => {
               setScreen('results');
               playSound('whoosh');
-            }} 
-            variant="secondary" 
-            className="!w-full !bg-gray-100 hover:!bg-gray-200 !text-gray-900 !shadow-md"
+            }}
+            aria-label="View results"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-pink-50 hover:bg-pink-100 text-pink-600 border-2 border-pink-100"
           >
-            <span className="flex flex-col items-center gap-1">
-              <Trophy className="w-6 h-6" />
-              <span className="text-xs">Results</span>
-              <span className="text-[10px] opacity-75">View Scores</span>
-            </span>
-          </Button>
-          
-          <Button 
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm flex-shrink-0">
+              <Trophy className="w-6 h-6 text-pink-600" aria-hidden />
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <span className="font-bold text-base block text-pink-600">Results</span>
+              <span className="text-xs text-pink-500 opacity-80">Scores</span>
+            </div>
+          </button>
+
+          <button
             onClick={() => {
               adminAdvance();
               playSound('whoosh');
-            }} 
-            className="!w-full !bg-yellow-400 hover:!bg-yellow-500 !text-gray-900 !shadow-xl"
+            }}
+            aria-label={quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? 'Next question' : 'Finish quiz'}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border-2 border-yellow-100"
           >
-            <span className="flex flex-col items-center gap-1">
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm flex-shrink-0">
               {quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? (
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="w-6 h-6 text-yellow-600" aria-hidden />
               ) : (
-                <Flag className="w-6 h-6" />
+                <Flag className="w-6 h-6 text-yellow-600" aria-hidden />
               )}
-              <span className="text-xs font-black">{quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? 'Next' : 'Finish'}</span>
-              <span className="text-[10px] opacity-75">
-                {quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 
-                  ? `${quizRoom.questions.length - quizRoom.currentQuestionIndex - 1} left` 
-                  : 'End Quiz'}
+            </div>
+            <div className="flex-1 text-left min-w-0">
+              <span className="font-bold text-base block text-yellow-600">
+                {quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? 'Next' : 'Finish'}
               </span>
-            </span>
-          </Button>
-        </div>
-
-        {/* Keyboard Shortcuts Help */}
+              <span className="text-xs text-yellow-500 opacity-80">
+                {quizRoom.currentQuestionIndex < quizRoom.questions.length - 1
+                  ? `${quizRoom.questions.length - quizRoom.currentQuestionIndex - 1} left`
+                  : 'Quiz'}
+              </span>
+            </div>
+          </button>
+        </div>        {/* Keyboard Shortcuts Help */}
   <div className="mt-6 p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
           <div className="flex items-center gap-3 mb-2">
             <Keyboard className="w-5 h-5 text-gray-700" />
@@ -515,10 +565,10 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
 
   const getOptionClasses = (index: number) => {
     const config = optionConfig[index];
-    let baseClasses = `w-full ${isManualMode ? 'min-h-[100px]' : 'aspect-square'} flex items-center justify-center rounded-2xl border-4 transition-all transform text-white font-black ${config.shadow}`;
+    let baseClasses = `w-full ${isManualMode ? 'min-h-[100px] sm:min-h-[120px]' : 'aspect-square min-h-[120px] sm:min-h-0'} flex items-center justify-center rounded-2xl sm:rounded-3xl border-4 transition-all transform text-white font-black ${config.shadow} active:scale-95 pointer-events-auto`;
     
     if (!isAnswered && quizRoom.acceptingAnswers) {
-      return `${baseClasses} ${config.bg} ${config.border} ${config.hoverBg} hover:scale-[1.02] active:scale-95 cursor-pointer`;
+      return `${baseClasses} ${config.bg} ${config.border} ${config.hoverBg} hover:scale-[1.02] cursor-pointer touch-manipulation`;
     }
     
     if (isAnswered) {
@@ -528,7 +578,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     }
     
     // Disabled state
-    return `${baseClasses} bg-gray-700 border-gray-600 opacity-50 cursor-not-allowed`;
+    return `${baseClasses} bg-gray-700 border-gray-600 opacity-50 cursor-not-allowed pointer-events-none`;
   };
 
   return (
@@ -598,13 +648,16 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
           </div>
         )}
         
-        <div className={`h-full grid grid-cols-${isManualMode ? '1' : '2'} gap-5 lg:gap-8`}>
+        <div className={isManualMode ? 'h-full grid grid-cols-1 gap-5 lg:gap-8' : 'h-full grid grid-cols-2 gap-5 lg:gap-8'}>
           {optionConfig.map((config, index) => (
             <button
               key={index}
-              onClick={() => handleOptionClick(index)}
-              disabled={isAnswered || !quizRoom.acceptingAnswers}
+              onClick={() => {
+                console.log('Button clicked!', { index, isAnswered, userRole, acceptingAnswers: quizRoom.acceptingAnswers });
+                handleOptionClick(index);
+              }}
               className={getOptionClasses(index)}
+              type="button"
             >
               {isManualMode ? (
                 // Manual Mode: Show full option text with symbol
@@ -631,10 +684,12 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     </div>
 
       {/* Answer Reveal Modal - Student View */}
-      {showRevealAnimation && selectedOption !== null && (
+      {showRevealAnimation && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4">
           <div className={`relative max-w-lg sm:max-w-2xl w-full mx-4 p-6 sm:p-12 rounded-3xl shadow-2xl transform transition-all duration-500 ${
-            selectedOption === currentQuestion.correctOption 
+            selectedOption === -1 
+              ? 'bg-orange-500 animate-shake'
+              : selectedOption === currentQuestion.correctOption 
               ? 'bg-green-500 animate-bounce-in scale-110' 
               : 'bg-red-500 animate-shake'
           }`}>
@@ -659,7 +714,13 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
 
             {/* Icon */}
             <div className="text-center mb-6 sm:mb-8">
-              {selectedOption === currentQuestion.correctOption ? (
+              {selectedOption === -1 ? (
+                <div className="inline-block text-white animate-scale-up">
+                  <svg className="w-24 h-24 sm:w-32 sm:h-32 mx-auto drop-shadow-2xl" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L10 10.586l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+              ) : selectedOption === currentQuestion.correctOption ? (
                 <div className="inline-block text-white animate-scale-up">
                   <svg className="w-24 h-24 sm:w-32 sm:h-32 mx-auto drop-shadow-2xl" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -677,14 +738,23 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
             {/* Message */}
             <div className="text-center space-y-3 sm:space-y-4">
               <h2 className="text-3xl sm:text-5xl font-black text-white drop-shadow-lg">
-                {selectedOption === currentQuestion.correctOption ? '🎉 CORRECT! 🎉' : '❌ WRONG!'}
+                {selectedOption === -1 
+                  ? '⏱️ NOT ATTEMPTED' 
+                  : selectedOption === currentQuestion.correctOption 
+                  ? '🎉 CORRECT! 🎉' 
+                  : '❌ WRONG!'}
               </h2>
               <p className="text-lg sm:text-2xl font-bold text-white/90">
                 Correct Answer: <span className="font-black text-white drop-shadow-md">{optionConfig[currentQuestion.correctOption].label}</span>
               </p>
-              {selectedOption !== currentQuestion.correctOption && (
+              {selectedOption !== currentQuestion.correctOption && selectedOption !== -1 && (
                 <p className="text-base sm:text-xl font-semibold text-white/80">
                   Your Answer: <span className="line-through">{optionConfig[selectedOption].label}</span>
+                </p>
+              )}
+              {selectedOption === -1 && (
+                <p className="text-base sm:text-xl font-semibold text-white/90">
+                  You didn't submit an answer in time
                 </p>
               )}
             </div>
@@ -714,9 +784,9 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
           currentUserId={student?.id}
           questionNumber={quizRoom.currentQuestionIndex + 1}
           totalQuestions={quizRoom.questions.length}
-          onClose={() => {
+            onClose={() => {
             setShowLiveLeaderboard(false);
-            if (userRole === 'admin') {
+            if (isRole('admin')) {
               // Admin can continue from here
               showToast('Ready for next question', 'info');
             }

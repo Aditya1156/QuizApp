@@ -14,7 +14,7 @@ const Button: React.FC<ButtonProps> = ({
   ...props 
 }) => {
   // Base classes - inline-flex so buttons size to content by default; callers can force full width with `!w-full`
-  const baseClasses = "inline-flex items-center justify-center font-bold rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg whitespace-nowrap";
+  const baseClasses = "inline-flex items-center justify-center gap-2 font-bold rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg";
   
   // Size classes - standard heights for touch targets
   const sizeClasses = {
