@@ -76,45 +76,71 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const findRoomByCode = async (code: string): Promise<QuizRoom | null> => {
     try {
       console.log('Searching for room with code:', code);
+      
+      // Optimized: Use Firebase query with orderByChild for faster lookup
+      // Note: Requires Firebase database index on 'code' field
       const roomsRef = ref(database, 'rooms');
-      const snapshot = await get(roomsRef);
+      const roomQuery = query(roomsRef, orderByChild('code'), equalTo(code));
+      const snapshot = await get(roomQuery);
       
       if (snapshot.exists()) {
         const rooms = snapshot.val();
-        // Search through all rooms to find matching code
+        // Should only return one room, but iterate to be safe
         for (const roomId in rooms) {
           const room = rooms[roomId];
-          if (room.code === code) {
-            console.log('Found room:', room);
-            
-            // Validate room status - don't allow joining ended rooms
-            if (room.status === 'ended') {
-              console.log('Room has ended, cannot join');
-              return null;
-            }
-            
-            // Normalize responses and students arrays from Firebase object format
-            const normalized = {
-              ...room,
-              responses: Array.isArray(room.responses) 
-                ? room.responses 
-                : room.responses 
-                  ? Object.values(room.responses) 
-                  : [],
-              students: Array.isArray(room.students) 
-                ? room.students 
-                : room.students 
-                  ? Object.values(room.students) 
-                  : [],
-            };
-            return normalized as QuizRoom;
+          console.log('Found room:', room);
+          
+          // Validate room status - don't allow joining ended rooms
+          if (room.status === 'ended') {
+            console.log('Room has ended, cannot join');
+            return null;
           }
+          
+          // Normalize responses and students arrays from Firebase object format
+          const normalized = {
+            ...room,
+            responses: Array.isArray(room.responses) 
+              ? room.responses 
+              : room.responses 
+                ? Object.values(room.responses) 
+                : [],
+            students: Array.isArray(room.students) 
+              ? room.students 
+              : room.students 
+                ? Object.values(room.students) 
+                : [],
+          };
+          return normalized as QuizRoom;
         }
       }
+      
       console.log('No room found with code:', code);
       return null;
     } catch (error) {
       console.error('Error finding room:', error);
+      // Fallback to linear search if indexed query fails
+      console.warn('Falling back to linear search...');
+      try {
+        const roomsRef = ref(database, 'rooms');
+        const snapshot = await get(roomsRef);
+        
+        if (snapshot.exists()) {
+          const rooms = snapshot.val();
+          for (const roomId in rooms) {
+            const room = rooms[roomId];
+            if (room.code === code && room.status !== 'ended') {
+              const normalized = {
+                ...room,
+                responses: Array.isArray(room.responses) ? room.responses : room.responses ? Object.values(room.responses) : [],
+                students: Array.isArray(room.students) ? room.students : room.students ? Object.values(room.students) : [],
+              };
+              return normalized as QuizRoom;
+            }
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback search also failed:', fallbackError);
+      }
       return null;
     }
   };
