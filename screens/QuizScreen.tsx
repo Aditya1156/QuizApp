@@ -29,6 +29,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
   const [showLiveLeaderboard, setShowLiveLeaderboard] = useState(false);
   const [previousScores, setPreviousScores] = useState<any[]>([]);
   const [leaderboardShownForQuestion, setLeaderboardShownForQuestion] = useState<number>(-1);
+  const [isAdvancing, setIsAdvancing] = useState(false); // Prevent double-clicks on Next button
 
   // Warn users before leaving during active quiz
   useBeforeUnload(
@@ -62,6 +63,8 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     setShowLiveLeaderboard(false);
     // Reset leaderboard tracking when question changes
     setLeaderboardShownForQuestion(-1);
+    // Reset advancing flag when question changes
+    setIsAdvancing(false);
     
     // Save previous scores for rank comparison
     if (quizRoom) {
@@ -177,6 +180,17 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     }
   };
 
+  // Wrapped adminAdvance to prevent double-calls
+  const handleAdminAdvance = useCallback(() => {
+    if (isAdvancing) {
+      console.log('Already advancing, ignoring duplicate call');
+      return;
+    }
+    console.log('Advancing to next question...');
+    setIsAdvancing(true);
+    adminAdvance();
+  }, [isAdvancing, adminAdvance]);
+
   // Keyboard shortcuts: 1-4 for options (students). Admin shortcuts: Enter -> reveal, N -> next, O -> open, C -> close
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!quizRoom || !currentQuestion) return;
@@ -194,7 +208,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
         revealAnswers();
       }
       if (e.key.toLowerCase() === 'n') {
-        adminAdvance();
+        handleAdminAdvance();
       }
       if (e.key.toLowerCase() === 'o' && !quizRoom.acceptingAnswers) {
         // Open question
@@ -205,7 +219,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
         closeQuestion();
       }
     }
-  }, [quizRoom, currentQuestion, userRole, isAnswered, handleOptionClick, revealAnswers, adminAdvance, openQuestion, closeQuestion]);
+  }, [quizRoom, currentQuestion, userRole, isAnswered, handleOptionClick, revealAnswers, handleAdminAdvance, openQuestion, closeQuestion]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -523,11 +537,12 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
 
           <button
             onClick={() => {
-              adminAdvance();
+              handleAdminAdvance();
               playSound('whoosh');
             }}
+            disabled={isAdvancing}
             aria-label={quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? 'Next question' : 'Finish quiz'}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border-2 border-yellow-100"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 border-2 border-yellow-100 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-white shadow-sm flex-shrink-0">
               {quizRoom.currentQuestionIndex < quizRoom.questions.length - 1 ? (
