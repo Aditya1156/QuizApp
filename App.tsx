@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { QuizProvider, Screen, UserRole } from './hooks/useQuiz';
 import { AuthProvider } from './hooks/useAuth';
 import { ToastProvider } from './hooks/useToast';
@@ -6,7 +6,6 @@ import LandingScreen from './screens/LandingScreen';
 import HomeScreen from './screens/HomeScreen';
 import AdminLoginScreen from './screens/AdminLoginScreen';
 import AdminSignupScreen from './screens/AdminSignupScreen';
-import AdminDashboardScreen from './screens/AdminDashboardScreen';
 import StudentJoinScreen from './screens/StudentJoinScreen';
 import LobbyScreen from './screens/LobbyScreen';
 import QuizScreen from './screens/QuizScreen';
@@ -15,8 +14,12 @@ import PricingScreen from './screens/PricingScreen';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Sidebar from './components/Sidebar';
-import PixelBlast from './components/PixelBlast';
 import SoundToggle from './components/SoundToggle';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load heavy components
+const AdminDashboardScreen = lazy(() => import('./screens/AdminDashboardScreen'));
+const PixelBlast = lazy(() => import('./components/PixelBlast'));
 
 function AppContent() {
   // Read the room param synchronously so initial render can go to the join screen
@@ -49,7 +52,11 @@ function AppContent() {
       case 'admin_signup':
         return <AdminSignupScreen setScreen={setScreen} />;
       case 'admin_dashboard':
-        return <AdminDashboardScreen setScreen={setScreen} />;
+        return (
+          <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-32 w-32 border-b-2 border-violet-600"></div></div>}>
+            <AdminDashboardScreen setScreen={setScreen} />
+          </Suspense>
+        );
       case 'student_join':
         return <StudentJoinScreen setScreen={setScreen} initialRoomCode={initialRoomCode ?? undefined} />;
       case 'lobby':
@@ -127,13 +134,15 @@ function AppContent() {
 
 function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <QuizProvider>
-          <AppContent />
-        </QuizProvider>
-      </AuthProvider>
-    </ToastProvider>
+    <ErrorBoundary>
+      <ToastProvider>
+        <AuthProvider>
+          <QuizProvider>
+            <AppContent />
+          </QuizProvider>
+        </AuthProvider>
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }
 

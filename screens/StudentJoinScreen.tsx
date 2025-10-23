@@ -6,6 +6,7 @@ import Input from '../components/Input';
 import QRScanner from '../components/QRScanner';
 import { QrCode } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
+import { GraduationCapIcon } from '../components/icons/GraduationCapIcon';
 
 interface StudentJoinScreenProps {
   setScreen: (screen: Screen) => void;
@@ -107,7 +108,7 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
       <div className="w-full max-w-md p-8 bg-white border-2 border-gray-200 rounded-3xl shadow-xl animate-fade-in-up">
         <div className="flex items-center justify-center mb-4">
           <div className="w-16 h-16 rounded-full bg-cyan-200 flex items-center justify-center shadow-lg">
-            <span className="text-3xl">🎓</span>
+            <GraduationCapIcon className="w-10 h-10 text-gray-900" />
           </div>
         </div>
         <h2 className="text-3xl font-bold mb-2 text-center text-gray-900">Join Quiz</h2>
