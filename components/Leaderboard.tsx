@@ -32,11 +32,11 @@ const Leaderboard: React.FC<LeaderboardProps> = memo(({ scores, currentUserId, i
       case 1:
         return 'bg-gradient-to-r from-violet-600 to-purple-600 border-violet-500 text-white';
       case 2:
-        return 'bg-zinc-800 border-zinc-700';
+        return 'bg-gradient-to-r from-slate-700 to-slate-800 border-slate-600 text-white';
       case 3:
-        return 'bg-zinc-800 border-zinc-700';
+        return 'bg-gradient-to-r from-amber-700 to-orange-700 border-amber-600 text-white';
       default:
-        return 'bg-zinc-800 border-zinc-700';
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 border-gray-300 text-gray-900';
     }
   }, []);
 

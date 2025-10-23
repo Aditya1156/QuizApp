@@ -22,11 +22,11 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
     { id: 'admin_dashboard', label: 'Dashboard', icon: AnalyticsIcon, color: 'bg-yellow-400', requiresRoom: false },
     { id: 'lobby', label: 'Lobby', icon: GraduationCapIcon, color: 'bg-cyan-200', requiresRoom: true },
     { id: 'quiz', label: 'Quiz', icon: QuizIcon, color: 'bg-green-500', requiresRoom: true },
-    { id: 'results', label: 'Results', icon: CrownIcon, color: 'bg-gray-900', requiresRoom: true },
+    { id: 'results', label: 'Results', icon: CrownIcon, color: 'bg-gradient-to-r from-purple-500 to-pink-500', requiresRoom: true },
   ] : userRole === 'student' ? [
     { id: 'lobby', label: 'Lobby', icon: GraduationCapIcon, color: 'bg-cyan-200', requiresRoom: true },
     { id: 'quiz', label: 'Quiz', icon: QuizIcon, color: 'bg-yellow-400', requiresRoom: true },
-    { id: 'results', label: 'Results', icon: CrownIcon, color: 'bg-gray-900', requiresRoom: true },
+    { id: 'results', label: 'Results', icon: CrownIcon, color: 'bg-gradient-to-r from-purple-500 to-pink-500', requiresRoom: true },
   ] : [];
 
   if (menuItems.length === 0) return null;
@@ -128,7 +128,7 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
                     )}
                   </div>
                   {isActive && !isDisabled && (
-                    <div className="ml-auto w-2 h-2 rounded-full bg-gray-900 animate-pulse" />
+                    <div className="ml-auto w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-lg shadow-green-500/50" />
                   )}
                 </button>
               );
