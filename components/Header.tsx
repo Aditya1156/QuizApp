@@ -57,24 +57,12 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
   };
   
   return (
-    <header className="flex-shrink-0 w-full bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-sm sticky top-0 z-50 transition-all">
+    <header className="flex-shrink-0 w-full bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-sm sticky top-0 z-50 transition-all">
       <div className="container mx-auto px-4 lg:px-6">
         <div className="flex justify-between items-center h-16 lg:h-20">
-          {/* Left Section: Menu + Logo */}
-          <div className="flex items-center gap-3 lg:gap-4">
-            {/* Menu Button for Mobile/Tablet */}
-            {showMenuButton && (
-              <button
-                onClick={onMenuClick}
-                className="lg:hidden w-10 h-10 rounded-xl bg-gradient-to-br from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 flex items-center justify-center transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95"
-                aria-label="Menu"
-              >
-                <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              </button>
-            )}
-            
+          {/* Left Section: Logo + Quick Nav */}
+          <div className="flex items-center gap-4 lg:gap-6">
+            {/* Logo */}
             <div 
               className="flex items-center space-x-2 lg:space-x-3 cursor-pointer group"
               onClick={() => {
@@ -98,6 +86,34 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
                 ArenaQuest
               </h1>
             </div>
+
+            {/* Quick Navigation Pills - Only show when logged in */}
+            {user && !isLandingPage && (
+              <nav className="hidden md:flex items-center gap-2">
+                {isAdmin && (
+                  <button
+                    onClick={() => setScreen('admin_dashboard')}
+                    className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                      screen === 'admin_dashboard'
+                        ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 shadow-md'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    📊 Dashboard
+                  </button>
+                )}
+                <button
+                  onClick={() => setScreen('home')}
+                  className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-200 ${
+                    screen === 'home'
+                      ? 'bg-gradient-to-r from-cyan-400 to-cyan-500 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  🏠 Home
+                </button>
+              </nav>
+            )}
           </div>
           
           {isLandingPage ? (
@@ -137,69 +153,24 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
               </Button>
             </div>
               ) : (
-            <div className="flex items-center space-x-3 lg:space-x-4">
-              {/* Small inline sound toggle */}
-              <div className="hidden md:block">
-                <SoundToggle size="sm" className="p-2 w-9 h-9 bg-white/90 border-2 border-gray-200 hover:border-yellow-400" />
+            <div className="flex items-center space-x-2 lg:space-x-3">
+              {/* Sound Toggle */}
+              <div className="hidden lg:block">
+                <SoundToggle size="sm" className="p-2 w-9 h-9 bg-gray-50 border border-gray-200 hover:border-yellow-400 hover:bg-yellow-50" />
               </div>
-              {/* Prev / Next navigation */}
-              <div className="hidden md:flex items-center gap-2">
-                <button
-                  onClick={() => prevScreen && setScreen(prevScreen)}
-                  disabled={!hasPrev}
-                  className="w-9 h-9 rounded-lg border-2 border-gray-300 hover:border-yellow-400 hover:bg-yellow-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center group"
-                  aria-label="Previous"
-                >
-                  <svg className="w-4 h-4 text-gray-700 group-hover:text-gray-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-                <button
-                  onClick={() => nextScreen && setScreen(nextScreen)}
-                  disabled={!hasNext}
-                  className="w-9 h-9 rounded-lg border-2 border-gray-300 hover:border-yellow-400 hover:bg-yellow-50 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center group"
-                  aria-label="Next"
-                >
-                  <svg className="w-4 h-4 text-gray-700 group-hover:text-gray-900" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-              
-              {/* Navigation for logged-in users */}
-              {user && (
-                <nav className="hidden lg:flex items-center space-x-1">
-                  {isAdmin && (
-                    <button
-                      onClick={() => setScreen('admin_dashboard')}
-                      className="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center gap-1.5"
-                    >
-                      <span className="text-base">📊</span>
-                      <span>Dashboard</span>
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setScreen('home')}
-                    className="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 font-semibold rounded-lg hover:bg-gray-100 transition-all duration-200 flex items-center gap-1.5"
-                  >
-                    <span className="text-base">🏠</span>
-                    <span>Home</span>
-                  </button>
-                </nav>
-              )}
 
               {/* User Menu or Login Button */}
               {user ? (
                 <div className="relative">
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-2 bg-gradient-to-br from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white pl-1 pr-3 lg:pr-4 py-1 rounded-full font-bold transition-all duration-200 shadow-lg hover:shadow-xl"
+                    className="flex items-center space-x-2 lg:space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-900 pl-2 pr-3 lg:pr-4 py-2 rounded-full font-bold transition-all duration-200 border-2 border-gray-200 hover:border-yellow-400 shadow-sm hover:shadow-md"
                   >
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-400 to-yellow-500 text-gray-900 rounded-full flex items-center justify-center text-sm font-black shadow-inner">
+                    <div className="w-8 h-8 lg:w-9 lg:h-9 bg-gradient-to-br from-yellow-400 to-yellow-500 text-gray-900 rounded-full flex items-center justify-center text-sm font-black shadow-md">
                       {getUserInitials()}
                     </div>
-                    <span className="hidden sm:inline text-sm lg:text-base">{user.displayName || user.email?.split('@')[0]}</span>
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <span className="hidden sm:inline text-sm lg:text-base font-bold">{user.displayName || user.email?.split('@')[0]}</span>
+                    <svg className={`w-4 h-4 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                   </button>
