@@ -44,11 +44,11 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
         setError('');
         setScreen('lobby');
       } else {
-        setError('Invalid room code. Please check and try again.');
+        setError('Room not found or has ended. Please check the code or ask the Quiz Master for a new room.');
       }
     } catch (err) {
       console.error('Join error:', err);
-      setError('Failed to join room. Please try again.');
+      setError('Failed to join room. The quiz may have ended or the room code is invalid.');
     }
   };
 
@@ -83,7 +83,7 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
             setError('');
             setScreen('lobby');
           } else {
-            setError('Invalid room code. Please check and try again.');
+            setError('Room not found or has ended. Please scan again or enter code manually.');
           }
         } catch (err) {
           console.error('Join error:', err);

@@ -14,8 +14,9 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // If a room is set locally, listen for remote updates to keep in sync
   useEffect(() => {
-    if (!quizRoom) return;
-    const path = `/rooms/${quizRoom.id}`;
+    if (!quizRoom?.id) return;
+    const roomId = quizRoom.id; // Store ID to avoid dependency on full quizRoom object
+    const path = `/rooms/${roomId}`;
     const unsubscribe = dbOnValue(path, (val) => {
       if (!val) return;
       // Normalize responses: Firebase may return it as object, convert to array
@@ -83,6 +84,13 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const room = rooms[roomId];
           if (room.code === code) {
             console.log('Found room:', room);
+            
+            // Validate room status - don't allow joining ended rooms
+            if (room.status === 'ended') {
+              console.log('Room has ended, cannot join');
+              return null;
+            }
+            
             // Normalize responses and students arrays from Firebase object format
             const normalized = {
               ...room,

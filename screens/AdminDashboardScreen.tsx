@@ -7,6 +7,7 @@ import AdminSidebar from '../components/AdminSidebar';
 import { Question } from '../types';
 import { useToast } from '../hooks/useToast';
 import { GoogleGenAI, Type } from "@google/genai";
+import ConfirmDialog from '../components/ConfirmDialog';
 
 interface AdminDashboardScreenProps {
   setScreen: (screen: Screen) => void;
@@ -18,14 +19,17 @@ const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ setScreen }
   // Sidebar navigation state
   const [activeNav, setActiveNav] = useState('admin_dashboard');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { createRoom } = useQuiz();
-  const { cancelQuiz } = useQuiz();
+  const { createRoom, quizRoom, cancelQuiz } = useQuiz();
   const { showToast } = useToast();
   const [quizName, setQuizName] = useState('');
   const [mode, setMode] = useState<QuizMode>('option-only');
   const [numQuestions, setNumQuestions] = useState(5);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showActiveRoomWarning, setShowActiveRoomWarning] = useState(false);
+
+  // Check if admin already has an active room
+  const hasActiveRoom = quizRoom && (quizRoom.status === 'waiting' || quizRoom.status === 'active');
   
   // Option Mode: Admin only sets correct answers
   const [questionSettings, setQuestionSettings] = useState<Array<{
@@ -140,6 +144,12 @@ const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ setScreen }
   };
 
   const handleCreateRoom = () => {
+    // Check if admin already has an active room
+    if (hasActiveRoom) {
+      setShowActiveRoomWarning(true);
+      return;
+    }
+
     if (!quizName.trim()) {
       setError('Please provide a quiz name.');
       return;
@@ -183,6 +193,18 @@ const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ setScreen }
     createRoom(quizName.trim(), questions, mode);
     console.log('Room created, navigating to lobby');
     setScreen('lobby');
+  };
+
+  const handleCloseActiveRoom = () => {
+    if (quizRoom) {
+      cancelQuiz('Quiz Master started a new quiz session. This room has been closed.');
+      showToast('Previous room closed successfully', 'success');
+    }
+    setShowActiveRoomWarning(false);
+    // Small delay to allow state to update
+    setTimeout(() => {
+      handleCreateRoom();
+    }, 100);
   };
 
   const optionColors = [
@@ -762,6 +784,21 @@ const AdminDashboardScreen: React.FC<AdminDashboardScreenProps> = ({ setScreen }
           </div>
         </div>
       </main>
+
+      {/* Active Room Warning Dialog */}
+      <ConfirmDialog
+        isOpen={showActiveRoomWarning}
+        title="Active Room Detected"
+        message={`You already have an active quiz room "${quizRoom?.name}" (Code: ${quizRoom?.code}). Creating a new room will close the existing one and disconnect all students. Do you want to continue?`}
+        confirmText="Close Current & Create New"
+        cancelText="Keep Current Room"
+        variant="warning"
+        onConfirm={handleCloseActiveRoom}
+        onCancel={() => {
+          setShowActiveRoomWarning(false);
+          showToast('Cancelled. Your current room is still active.', 'info');
+        }}
+      />
     </div>
   );
 };

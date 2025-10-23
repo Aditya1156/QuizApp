@@ -1,45 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import { Screen, UserRole } from '../hooks/useQuiz';
 import Button from '../components/Button';
 import { playSound } from '../utils/sounds';
 import { QRCodeSVG } from 'qrcode.react';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useBeforeUnload, useNavigationWarning } from '../hooks/useBeforeUnload';
 
 interface LobbyScreenProps {
   setScreen: (screen: Screen) => void;
   userRole: UserRole | null;
 }
 
-const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
-  const { quizRoom, startQuiz } = useQuiz();
+const LobbyScreen: React.FC<LobbyScreenProps> = memo(({ setScreen, userRole }) => {
+  const { quizRoom, startQuiz, cancelQuiz } = useQuiz();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [readyPlayers, setReadyPlayers] = useState<Set<string>>(new Set());
   const [showQuizPreview, setShowQuizPreview] = useState(false);
-  const roomLink = React.useMemo(() => {
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<Screen | null>(null);
+  const prevStudentCountRef = useRef<number>(0);
+
+  // Warn admin before leaving (browser close/refresh)
+  useBeforeUnload(
+    userRole === 'admin' && !!quizRoom,
+    'Your quiz room will be closed if you leave. Students will be disconnected.'
+  );
+
+  // Only enable navigation warning after room is created
+  const [navigationEnabled, setNavigationEnabled] = React.useState(false);
+
+  React.useEffect(() => {
+    if (quizRoom && userRole === 'admin') {
+      // Small delay to prevent triggering on room creation
+      const timer = setTimeout(() => {
+        setNavigationEnabled(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [quizRoom, userRole]);
+
+  // Warn admin before navigating back in app
+  const handleNavWarning = useCallback(() => {
+    setShowExitConfirm(true);
+    return false; // Prevent navigation
+  }, []);
+  
+  useNavigationWarning(navigationEnabled, handleNavWarning);
+  
+  const roomLink = useMemo(() => {
     if (typeof window === 'undefined') return '';
     const base = `${window.location.origin}${window.location.pathname}`;
     return quizRoom?.code ? `${base}?room=${quizRoom.code}` : `${base}`;
   }, [quizRoom?.code]);
 
-  React.useEffect(() => {
-    console.log('LobbyScreen mounted, userRole:', userRole, 'quizRoom:', quizRoom);
-  }, []);
+  const studentCount = useMemo(() => quizRoom?.students?.length || 0, [quizRoom?.students]);
 
-  React.useEffect(() => {
+  // Mount effect - log only once
+  useEffect(() => {
+    console.log('LobbyScreen mounted, userRole:', userRole);
+  }, [userRole]);
+
+  // Handle status change
+  useEffect(() => {
     if (quizRoom?.status === 'active') {
       console.log('Quiz status changed to active, navigating to quiz screen');
       setScreen('quiz');
     }
   }, [quizRoom?.status, setScreen]);
 
-  React.useEffect(() => {
+  // Handle missing room
+  useEffect(() => {
     if (!quizRoom) {
       console.log('No quiz room found, redirecting to home');
       setScreen('home');
-      return;
     }
   }, [quizRoom, setScreen]);
+
+  // Play join sound when new students join (only when count increases)
+  useEffect(() => {
+    if (studentCount > prevStudentCountRef.current && prevStudentCountRef.current > 0) {
+      playSound('join');
+    }
+    prevStudentCountRef.current = studentCount;
+  }, [studentCount]);
 
   if (!quizRoom) {
     return (
@@ -51,19 +96,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     );
   }
 
-  const studentCount = quizRoom.students?.length || 0;
-  console.log('Rendering lobby with room:', quizRoom.name, 'Code:', quizRoom.code, 'Students:', studentCount);
-
-  // Play join sound when new students join
-  useEffect(() => {
-    if (studentCount > 0) {
-      playSound('join');
-    }
-  }, [studentCount]);
-
-  const handleStartQuiz = () => {
+  const handleStartQuiz = useCallback(() => {
     // start a short countdown for nicer UX, then call startQuiz
-    if ((quizRoom?.students?.length || 0) === 0) {
+    if (studentCount === 0) {
       // fallback: still call startQuiz if no players (admin choice)
       startQuiz();
       return;
@@ -71,7 +106,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
 
     setCountdown(5);
     playSound('countdown'); // Play countdown sound when starting
-  };
+  }, [studentCount, startQuiz]);
 
   // countdown effect: when it reaches 0, fire startQuiz()
   useEffect(() => {
@@ -86,7 +121,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     return () => clearTimeout(timer);
   }, [countdown, startQuiz]);
 
-  const handleCopyLink = async () => {
+  const handleCopyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(roomLink);
       setCopySuccess(true);
@@ -96,9 +131,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     } catch (e) {
       console.error('copy failed', e);
     }
-  };
+  }, [roomLink]);
 
-  const handleCopyCode = async () => {
+  const handleCopyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(quizRoom?.code || '');
       playSound('success');
@@ -106,7 +141,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     } catch (e) {
       console.error('copy failed', e);
     }
-  };
+  }, [quizRoom?.code]);
 
   return (
   <div className="w-full max-w-5xl animate-fade-in-up space-y-6 px-4">
@@ -338,8 +373,34 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
         </div>
       </div>
     )}
+
+    {/* Exit Confirmation Dialog for Admin */}
+    {userRole === 'admin' && (
+      <ConfirmDialog
+        isOpen={showExitConfirm}
+        title="Leave Quiz Room?"
+        message="If you leave now, the quiz room will be closed and all students will be disconnected. Are you sure?"
+        confirmText="Close Room & Leave"
+        cancelText="Stay in Room"
+        variant="danger"
+        onConfirm={() => {
+          // Cancel the quiz and notify students
+          if (quizRoom) {
+            cancelQuiz('Quiz Master has left the room. Quiz cancelled.');
+          }
+          setShowExitConfirm(false);
+          setScreen('admin_dashboard');
+        }}
+        onCancel={() => {
+          setShowExitConfirm(false);
+          setPendingNavigation(null);
+        }}
+      />
+    )}
   </div>
   );
-};
+});
+
+LobbyScreen.displayName = 'LobbyScreen';
 
 export default LobbyScreen;

@@ -5,6 +5,8 @@ import Button from './Button';
 interface AdminSidebarProps {
   onNavigate: (screen: string) => void;
   active: string;
+  hasActiveRoom?: boolean;
+  onActiveRoomWarning?: () => void;
 }
 
 const navLinks = [
@@ -14,8 +16,17 @@ const navLinks = [
   { key: 'home', label: 'Home', icon: '🏠' },
 ];
 
-const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, active }) => {
+const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, active, hasActiveRoom = false, onActiveRoomWarning }) => {
   const { user, isAdmin, logout } = useAuth();
+
+  const handleNavClick = (key: string) => {
+    // If navigating to dashboard while having active room, show warning
+    if (key === 'admin_dashboard' && hasActiveRoom && onActiveRoomWarning) {
+      onActiveRoomWarning();
+      return;
+    }
+    onNavigate(key);
+  };
 
   return (
     <aside className="h-full w-64 bg-white border-r border-gray-200 shadow-xl flex flex-col">
@@ -34,7 +45,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onNavigate, active }) => {
         {navLinks.map(link => (
           <button
             key={link.key}
-            onClick={() => onNavigate(link.key)}
+            onClick={() => handleNavClick(link.key)}
             className={`w-full flex items-center gap-3 px-5 py-3 rounded-xl font-bold text-lg transition-all
               ${active === link.key ? 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-white shadow-lg scale-105' : 'bg-gray-100 text-gray-700 hover:bg-yellow-50 hover:text-yellow-600 hover:scale-105'}
             `}

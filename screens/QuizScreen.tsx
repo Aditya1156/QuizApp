@@ -7,6 +7,8 @@ import Timer from '../components/Timer';
 import LiveLeaderboardModal from '../components/LiveLeaderboardModal';
 import { Student } from '../types';
 import Button from '../components/Button';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useBeforeUnload } from '../hooks/useBeforeUnload';
 import { Target, Gamepad2, Edit3, Play, Pause, Eye, Trophy, ChevronRight, Flag, Keyboard, Clock, Hash, Info, Presentation, BarChart3 } from 'lucide-react';
 
 interface QuizScreenProps {
@@ -15,7 +17,7 @@ interface QuizScreenProps {
 }
 
 const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
-  const { quizRoom, nextQuestion, submitAnswer, openQuestion, closeQuestion, revealAnswers, adminAdvance, getScores } = useQuiz();
+  const { quizRoom, nextQuestion, submitAnswer, openQuestion, closeQuestion, revealAnswers, adminAdvance, getScores, cancelQuiz } = useQuiz();
   const { showToast } = useToast();
   // helper to avoid TypeScript narrowing issues when checking role in closures
   const isRole = (r: 'admin' | 'student') => userRole === r;
@@ -27,6 +29,14 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
   const [showLiveLeaderboard, setShowLiveLeaderboard] = useState(false);
   const [previousScores, setPreviousScores] = useState<any[]>([]);
   const [leaderboardShownForQuestion, setLeaderboardShownForQuestion] = useState<number>(-1);
+
+  // Warn users before leaving during active quiz
+  useBeforeUnload(
+    quizRoom?.status === 'active',
+    userRole === 'admin' 
+      ? 'The quiz is active! If you leave, the room will be closed and students will be disconnected.'
+      : 'The quiz is in progress! If you leave, you will lose your current progress.'
+  );
 
   const currentQuestion = quizRoom?.questions[quizRoom.currentQuestionIndex];
 
@@ -82,7 +92,8 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     if (quizRoom?.answersRevealed && isRole('student') && leaderboardShownForQuestion !== currentQIndex) {
       setShowRevealAnimation(true);
       // Play sound based on correctness
-      if (selectedOption === -1) {
+      // Check for null or -1 as unattempted
+      if (selectedOption === null || selectedOption === -1) {
         playSound('wrong'); // Not attempted sound
       } else if (selectedOption === currentQuestion?.correctOption) {
         playSound('correct');
@@ -684,17 +695,17 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
     </div>
 
       {/* Answer Reveal Modal - Student View */}
-      {showRevealAnimation && (
+      {showRevealAnimation && currentQuestion && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in p-4">
           <div className={`relative max-w-lg sm:max-w-2xl w-full mx-4 p-6 sm:p-12 rounded-3xl shadow-2xl transform transition-all duration-500 ${
-            selectedOption === -1 
+            selectedOption === null || selectedOption === -1 
               ? 'bg-orange-500 animate-shake'
               : selectedOption === currentQuestion.correctOption 
               ? 'bg-green-500 animate-bounce-in scale-110' 
               : 'bg-red-500 animate-shake'
           }`}>
             {/* Confetti effect for correct answer */}
-            {selectedOption === currentQuestion.correctOption && (
+            {selectedOption !== null && selectedOption !== -1 && selectedOption === currentQuestion.correctOption && (
               <div className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
                 {[...Array(30)].map((_, i) => (
                   <div
@@ -714,7 +725,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
 
             {/* Icon */}
             <div className="text-center mb-6 sm:mb-8">
-              {selectedOption === -1 ? (
+              {(selectedOption === null || selectedOption === -1) ? (
                 <div className="inline-block text-white animate-scale-up">
                   <svg className="w-24 h-24 sm:w-32 sm:h-32 mx-auto drop-shadow-2xl" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L10 10.586l-1.293 1.293a1 1 0 001.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
@@ -738,7 +749,7 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
             {/* Message */}
             <div className="text-center space-y-3 sm:space-y-4">
               <h2 className="text-3xl sm:text-5xl font-black text-white drop-shadow-lg">
-                {selectedOption === -1 
+                {(selectedOption === null || selectedOption === -1)
                   ? '⏱️ NOT ATTEMPTED' 
                   : selectedOption === currentQuestion.correctOption 
                   ? '🎉 CORRECT! 🎉' 
@@ -747,12 +758,12 @@ const QuizScreen: React.FC<QuizScreenProps> = ({ setScreen, userRole }) => {
               <p className="text-lg sm:text-2xl font-bold text-white/90">
                 Correct Answer: <span className="font-black text-white drop-shadow-md">{optionConfig[currentQuestion.correctOption].label}</span>
               </p>
-              {selectedOption !== currentQuestion.correctOption && selectedOption !== -1 && (
+              {selectedOption !== null && selectedOption !== -1 && selectedOption !== currentQuestion.correctOption && (
                 <p className="text-base sm:text-xl font-semibold text-white/80">
                   Your Answer: <span className="line-through">{optionConfig[selectedOption].label}</span>
                 </p>
               )}
-              {selectedOption === -1 && (
+              {(selectedOption === null || selectedOption === -1) && (
                 <p className="text-base sm:text-xl font-semibold text-white/90">
                   You didn't submit an answer in time
                 </p>
