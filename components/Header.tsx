@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { QuizIcon } from './icons/QuizIcon';
-import { Screen } from '../hooks/useQuiz';
+import { Screen, useQuiz } from '../hooks/useQuiz';
 import { useAuth } from '../hooks/useAuth';
 import Button from './Button';
 import SoundToggle from './SoundToggle';
+import ConfirmDialog from './ConfirmDialog';
 
 interface HeaderProps {
   screen: Screen;
@@ -14,7 +15,9 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMenuButton = false }) => {
   const { user, isAdmin, logout } = useAuth();
+  const { quizRoom, cancelQuiz } = useQuiz();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const isLandingPage = screen === 'landing';
   
   // Define simple linear flows for navigation (used by Prev / Next buttons)
@@ -74,7 +77,15 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
             
             <div 
               className="flex items-center space-x-2 lg:space-x-3 cursor-pointer group"
-              onClick={() => setScreen('landing')}
+              onClick={() => {
+                // Check if there's an active quiz room
+                if (quizRoom && (screen === 'lobby' || screen === 'quiz' || screen === 'results')) {
+                  // Show confirmation dialog before leaving
+                  setShowExitDialog(true);
+                } else {
+                  setScreen('landing');
+                }
+              }}
             >
               <div className="relative flex items-center">
                 {/* Sparkle Symbol */}
@@ -274,6 +285,31 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
           )}
         </div>
       </div>
+
+      {/* Exit Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showExitDialog}
+        title={isAdmin ? "Leave Quiz Room?" : "Leave Quiz?"}
+        message={
+          isAdmin 
+            ? "You're currently in an active quiz room. If you leave now, the room will be closed and all students will be disconnected. Are you sure you want to leave?"
+            : "You're currently in an active quiz. If you leave now, your progress will be lost. Are you sure you want to leave?"
+        }
+        confirmText={isAdmin ? "Close Room & Leave" : "Yes, Leave Quiz"}
+        cancelText="Stay Here"
+        variant="danger"
+        onConfirm={() => {
+          // Cancel/end the quiz if admin
+          if (isAdmin && quizRoom) {
+            cancelQuiz('Quiz Master has left the room. Quiz cancelled.');
+          }
+          setShowExitDialog(false);
+          setScreen('landing');
+        }}
+        onCancel={() => {
+          setShowExitDialog(false);
+        }}
+      />
     </header>
   );
 };
