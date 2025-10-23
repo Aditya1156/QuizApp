@@ -6,8 +6,31 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    scroll-behavior: smooth;
+    @apply antialiased;
+  }
+  
   body {
     @apply bg-gradient-to-br from-black via-zinc-950 to-zinc-900 text-foreground min-h-screen;
+  }
+
+  /* Improve text rendering */
+  body, input, textarea, button {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Better focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-yellow-400 ring-offset-2 ring-offset-white rounded;
+  }
+
+  /* Remove default button focus for mouse users, keep for keyboard */
+  button:focus:not(:focus-visible) {
+    @apply outline-none ring-0;
   }
 }
 
@@ -102,5 +125,120 @@
   
   .animate-fade-in-up {
     animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  /* Fade in animation */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.4s ease-out forwards;
+  }
+
+  /* Scale in animation */
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .animate-scale-in {
+    animation: scale-in 0.3s ease-out forwards;
+  }
+
+  /* Slide in from right */
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  .animate-slide-in-right {
+    animation: slide-in-right 0.4s ease-out forwards;
+  }
+
+  /* Pulse glow animation */
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(250, 204, 21, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 40px rgba(250, 204, 21, 0.6);
+    }
+  }
+  
+  .animate-pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  /* Shake animation for errors */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  /* Page transition */
+  @keyframes page-enter {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .page-enter {
+    animation: page-enter 0.3s ease-out;
+  }
+
+  /* Skeleton loading */
+  @keyframes skeleton-loading {
+    0% {
+      background-position: -200px 0;
+    }
+    100% {
+      background-position: calc(200px + 100%) 0;
+    }
+  }
+  
+  .skeleton {
+    background: linear-gradient(90deg, #f0f0f0 0px, #f8f8f8 40px, #f0f0f0 80px);
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.4s ease-in-out infinite;
+  }
+
+  /* Reduce motion for accessibility */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
