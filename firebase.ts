@@ -13,14 +13,15 @@ import {
 } from "firebase/auth";
 
 // Your web app's Firebase configuration
+// Using environment variables for better security practices
 const firebaseConfig = {
-  apiKey: "AIzaSyAKdQhoWM7krQQFRdKd_BKsAm0gCEVEszY",
-  authDomain: "roomtracker-8855b.firebaseapp.com",
-  databaseURL: "https://roomtracker-8855b-default-rtdb.firebaseio.com",
-  projectId: "roomtracker-8855b",
-  storageBucket: "roomtracker-8855b.firebasestorage.app",
-  messagingSenderId: "140446970291",
-  appId: "1:140446970291:web:268e52c44a623ea8c3dbc6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase

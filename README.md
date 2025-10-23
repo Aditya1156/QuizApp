@@ -53,8 +53,9 @@ cd arenaquest
 npm install
 
 # Set up environment variables
-# Create a .env.local file with:
-# API_KEY=your_google_gemini_api_key
+# Copy the example file and fill in your credentials
+cp .env.example .env
+# Edit .env with your Firebase and Gemini API keys
 
 # Start development server
 npm run dev
@@ -63,17 +64,39 @@ npm run dev
 npm run build
 ```
 
+> **⚠️ Security Note**: Never commit your `.env` file! It contains your actual credentials and is already in `.gitignore`.
+
 ### Firebase Setup
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project or select existing one
-3. Enable **Realtime Database**
-4. Enable **Authentication** with Email/Password provider
-5. Update Firebase config in `firebase.ts` with your project credentials
-6. Deploy database rules:
+1. **Create Firebase Project**
+   - Go to [Firebase Console](https://console.firebase.google.com/)
+   - Create a new project or select existing one
+
+2. **Enable Required Services**
+   - Enable **Realtime Database**
+   - Enable **Authentication** with Email/Password provider
+
+3. **Get Your Credentials**
+   - Go to **Project Settings** → **General**
+   - Scroll to "Your apps" → Select your web app
+   - Copy the Firebase configuration values
+
+4. **Configure Environment Variables**
+   - Copy `.env.example` to `.env`
+   - Fill in your Firebase credentials in `.env`:
+     ```env
+     VITE_FIREBASE_API_KEY=your_api_key_here
+     VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+     VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+     # ... etc
+     ```
+
+5. **Deploy Security Rules**
    ```bash
    npm run firebase:deploy
    ```
+
+> **💡 Tip**: See [SECURITY.md](./SECURITY.md) for detailed security information and best practices.
 
 ### Setting Up Your First Admin
 
@@ -334,15 +357,67 @@ firebase deploy --only hosting
 firebase deploy
 ```
 
-### Environment Variables
+### Environment Variables for Production
 
-Create a `.env.local` file:
+For production deployment, set these environment variables in your hosting platform:
 
 ```env
-API_KEY=your_google_gemini_api_key
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_DATABASE_URL=https://your-project.firebaseio.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_GEMINI_API_KEY=your_gemini_key
 ```
 
-**Important**: Never commit `.env.local` to git!
+**Important**: Never commit `.env` or `.env.local` files to git!
+
+---
+
+## 🔐 Security
+
+### Firebase API Keys - Important Notice
+
+**Firebase web API keys are public by design** - they're meant to be included in your client-side code. Real security comes from:
+
+1. **Firebase Authentication** - Users must authenticate
+2. **Database Security Rules** - Control data access
+3. **Admin Custom Claims** - Role-based access control
+4. **Domain Restrictions** - Limit API key usage to your domains
+
+### Security Best Practices
+
+✅ **Implemented:**
+- Environment variables for all credentials
+- `.env` files excluded from git
+- Firebase Authentication required
+- Admin role verification
+- Database security rules enforced
+- Service account keys gitignored
+
+### Rotating API Keys
+
+If you need to rotate your Firebase API key:
+
+1. Create a new web app in Firebase Console
+2. Update your `.env` file with new credentials
+3. Redeploy your application
+4. Delete the old app in Firebase Console
+
+**📖 For detailed security information, see [SECURITY.md](./SECURITY.md)**
+
+### Security Checklist
+
+- [ ] Database security rules configured
+- [ ] Authentication enabled and tested
+- [ ] Admin claims set up correctly
+- [ ] API keys restricted to your domains
+- [ ] `.env` files gitignored
+- [ ] Service account key secured
+- [ ] Dependencies regularly updated
+- [ ] Security audit completed
 
 ---
 
