@@ -7,14 +7,17 @@ import QRScanner from '../components/QRScanner';
 import { QrCode } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
 import { GraduationCapIcon } from '../components/icons/GraduationCapIcon';
+import { useAuth } from '../hooks/useAuth';
 
 interface StudentJoinScreenProps {
   setScreen: (screen: Screen) => void;
   initialRoomCode?: string;
+  setUserRole: (role: 'student') => void;
 }
 
-const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initialRoomCode }) => {
+const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initialRoomCode, setUserRole }) => {
   const { joinRoom, quizRoom } = useQuiz();
+  const { user, isAdmin } = useAuth();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -41,7 +44,14 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
     try {
       const student = await joinRoom(name.trim(), code.trim().toUpperCase());
       if (student) {
+        // Check if the user is an admin trying to join their own quiz
+        if (user && quizRoom?.adminId === user.uid) {
+          setError('⚠️ You are the Quiz Master of this room! You cannot join as a student. Please use the Admin Dashboard to manage this quiz.');
+          return;
+        }
+        
         setError('');
+        setUserRole('student'); // Set user role when successfully joining
         setScreen('lobby');
       } else {
         setError('Room not found or has ended. Please check the code or ask the Quiz Master for a new room.');
@@ -80,7 +90,14 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
         try {
           const student = await joinRoom(name.trim(), roomCode.toUpperCase());
           if (student) {
+            // Check if the user is an admin trying to join their own quiz
+            if (user && quizRoom?.adminId === user.uid) {
+              setError('⚠️ You are the Quiz Master of this room! You cannot join as a student. Please use the Admin Dashboard to manage this quiz.');
+              return;
+            }
+            
             setError('');
+            setUserRole('student'); // Set user role when successfully joining via QR
             setScreen('lobby');
           } else {
             setError('Room not found or has ended. Please scan again or enter code manually.');

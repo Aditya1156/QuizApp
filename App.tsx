@@ -58,7 +58,7 @@ function AppContent() {
           </Suspense>
         );
       case 'student_join':
-        return <StudentJoinScreen setScreen={setScreen} initialRoomCode={initialRoomCode ?? undefined} />;
+        return <StudentJoinScreen setScreen={setScreen} initialRoomCode={initialRoomCode ?? undefined} setUserRole={setUserRole} />;
       case 'lobby':
         return <LobbyScreen setScreen={setScreen} userRole={userRole} />;
       case 'quiz':

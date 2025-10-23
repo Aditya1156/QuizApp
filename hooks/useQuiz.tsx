@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { QuizRoom, QuizContextType, Question, Student, Response, QuizStatus } from '../types';
 import { DEFAULT_QUIZ_QUESTIONS } from '../constants';
-import { dbSet, dbOnValue, dbPush, dbUpdate, database } from '../firebase';
+import { dbSet, dbOnValue, dbPush, dbUpdate, database, auth } from '../firebase';
 import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 
 export type UserRole = 'admin' | 'student';
@@ -39,6 +39,7 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [quizRoom?.id]); // Only re-subscribe when room ID changes, not on every quizRoom update
 
   const createRoom = (name: string, questions: Question[], mode?: 'option-only' | string) => {
+    const adminId = auth.currentUser?.uid; // Get current admin's user ID
     const newRoom: QuizRoom = {
       id: Date.now().toString(),
       name,
@@ -46,6 +47,7 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       // liveLink will be filled in when available (window may be undefined in some SSR contexts)
       liveLink: typeof window !== 'undefined' ? `${window.location.origin}?room=${Math.random().toString(36).substring(2, 8).toUpperCase()}` : undefined,
       mode: mode ?? 'option-only',
+      adminId, // Store admin ID to prevent them from joining as student
       questions,
       status: 'waiting',
       currentQuestionIndex: 0,
