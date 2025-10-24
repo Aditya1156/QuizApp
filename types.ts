@@ -26,8 +26,6 @@ export interface QuizRoom {
   id: string;
   name: string;
   code: string;
-  // a sharable live link to join the room (optional)
-  liveLink?: string;
   // mode of the quiz: option-only for multiple-choice; other modes can be added later
   mode?: 'option-only' | string;
   questions: Question[];

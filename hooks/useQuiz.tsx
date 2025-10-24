@@ -42,8 +42,6 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       id: Date.now().toString(),
       name,
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
-      // liveLink will be filled in when available (window may be undefined in some SSR contexts)
-      liveLink: typeof window !== 'undefined' ? `${window.location.origin}?room=${Math.random().toString(36).substring(2, 8).toUpperCase()}` : undefined,
       mode: mode ?? 'option-only',
       questions,
       status: 'waiting',
