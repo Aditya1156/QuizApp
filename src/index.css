@@ -10,10 +10,19 @@
   html {
     scroll-behavior: smooth;
     @apply antialiased;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
+    /* Better font rendering on mobile */
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
   }
   
   body {
     @apply bg-gradient-to-br from-black via-zinc-950 to-zinc-900 text-foreground min-h-screen;
+    /* Prevent horizontal scroll */
+    overflow-x: hidden;
+    /* Better tap highlighting on mobile */
+    -webkit-tap-highlight-color: rgba(250, 204, 21, 0.2);
   }
 
   /* Improve text rendering */
@@ -31,6 +40,26 @@
   /* Remove default button focus for mouse users, keep for keyboard */
   button:focus:not(:focus-visible) {
     @apply outline-none ring-0;
+  }
+
+  /* Touch-friendly interactions */
+  button, a, input[type="button"], input[type="submit"] {
+    /* Minimum touch target size */
+    min-height: 44px;
+    min-width: 44px;
+    /* Better tap experience */
+    touch-action: manipulation;
+  }
+
+  /* Prevent text selection on buttons */
+  button {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Better input styling on mobile */
+  input, textarea, select {
+    font-size: 16px; /* Prevents zoom on iOS */
   }
 }
 
@@ -230,6 +259,16 @@
     animation: skeleton-loading 1.4s ease-in-out infinite;
   }
 
+  /* Mobile-specific optimizations */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Smooth scrolling on mobile with momentum */
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
   /* Reduce motion for accessibility */
   @media (prefers-reduced-motion: reduce) {
     *,
@@ -239,6 +278,14 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+  }
+
+  /* Mobile breakpoint utilities */
+  @media (max-width: 640px) {
+    /* Prevent zoom on double-tap for iOS */
+    * {
+      touch-action: manipulation;
     }
   }
 }

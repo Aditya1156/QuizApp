@@ -82,18 +82,18 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ setScreen }) => {
       {/* Content */}
       <div className="relative z-10">
       {/* Hero Section - Ultra Modern */}
-      <section className="py-20 sm:py-24 lg:py-32 relative overflow-hidden">
+      <section className="py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 relative overflow-hidden">
         {/* Hero Background Gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-yellow-50/50 via-white to-cyan-50/50"></div>
         
-        <div className="container mx-auto px-4 text-center relative">
+        <div className="container mx-auto px-3 sm:px-4 text-center relative">
           {/* Animated Icon Badge */}
-          <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in-up">
+          <div className="flex items-center justify-center gap-2 sm:gap-4 mb-5 sm:mb-6 md:mb-8 animate-fade-in-up">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-3xl blur-2xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
-              <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
-                <SparkleIcon className="w-10 h-10 sm:w-12 sm:h-12 text-white animate-spin-slow" />
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center animate-pulse">
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-2xl sm:rounded-3xl blur-xl sm:blur-2xl opacity-50 group-hover:opacity-75 transition-opacity"></div>
+              <div className="relative w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 flex items-center justify-center shadow-2xl transform group-hover:scale-110 transition-transform duration-300">
+                <SparkleIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white animate-spin-slow" />
+                <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-full border-2 sm:border-4 border-white flex items-center justify-center animate-pulse">
                   <span className="text-white text-xs font-bold">✓</span>
                 </div>
               </div>
@@ -101,41 +101,40 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ setScreen }) => {
           </div>
 
           {/* Hero Title with Gradient */}
-          <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black mb-6 sm:mb-8 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-            <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl font-black mb-4 sm:mb-5 md:mb-6 lg:mb-8 animate-fade-in-up leading-tight px-2" style={{ animationDelay: '0.1s' }}>
+            <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent block">
               Interactive Quiz Platform
             </span>
-            <br/>
-            <span className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 bg-clip-text text-transparent animate-gradient">
+            <span className="bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 bg-clip-text text-transparent animate-gradient block">
               for Modern Teams
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl sm:text-2xl lg:text-3xl text-gray-700 max-w-4xl mx-auto mb-10 lg:mb-14 px-4 font-semibold leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+          <p className="text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl text-gray-700 max-w-4xl mx-auto mb-6 sm:mb-8 md:mb-10 lg:mb-14 px-3 sm:px-4 font-semibold leading-relaxed animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
             Create engaging quizzes with <span className="text-yellow-600 font-black">AI-powered questions</span>, host live sessions with <span className="text-cyan-600 font-black">real-time leaderboards</span>, and track <span className="text-purple-600 font-black">detailed analytics</span>
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-5 justify-center px-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-5 justify-center px-3 sm:px-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
             <Button 
               onClick={() => setScreen('home')} 
               variant="primary" 
               size="lg" 
-              className="flex items-center justify-center gap-3 !text-xl !h-16 !px-10 group"
+              className="flex items-center justify-center gap-2 sm:gap-3 !text-base sm:!text-lg md:!text-xl !h-12 sm:!h-14 md:!h-16 !px-6 sm:!px-8 md:!px-10 group touch-manipulation active:scale-95 transition-transform w-full sm:w-auto"
             >
-              <RocketIcon className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+              <RocketIcon className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-12 transition-transform" />
               <span>Get Started Free</span>
-              <span className="text-2xl">→</span>
+              <span className="text-xl sm:text-2xl">→</span>
             </Button>
             <Button 
               onClick={() => setScreen('pricing' as Screen)} 
               variant="outline" 
               size="lg"
-              className="!text-xl !h-16 !px-10 group"
+              className="!text-base sm:!text-lg md:!text-xl !h-12 sm:!h-14 md:!h-16 !px-6 sm:!px-8 md:!px-10 group touch-manipulation active:scale-95 transition-transform w-full sm:w-auto"
             >
-              <span className="flex items-center gap-3">
-                <svg className="w-6 h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none">
+              <span className="flex items-center gap-2 sm:gap-3">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" fill="currentColor" className="text-yellow-400" />
                   <path d="M7 12l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-900" />
                 </svg>
@@ -145,54 +144,54 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ setScreen }) => {
           </div>
 
           {/* Trust Badges */}
-          <div className="mt-16 flex flex-wrap items-center justify-center gap-8 text-gray-500 text-sm font-semibold animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>✨ AI-Powered</span>
+          <div className="mt-8 sm:mt-12 md:mt-16 flex flex-wrap items-center justify-center gap-4 sm:gap-6 md:gap-8 text-gray-500 text-xs sm:text-sm font-semibold animate-fade-in-up px-2" style={{ animationDelay: '0.4s' }}>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
+              <span className="whitespace-nowrap">✨ AI-Powered</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>⚡ Real-Time</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
+              <span className="whitespace-nowrap">⚡ Real-Time</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>🔒 Secure</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
+              <span className="whitespace-nowrap">🔒 Secure</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span>📊 Analytics</span>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse flex-shrink-0"></div>
+              <span className="whitespace-nowrap">📊 Analytics</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section - Modern Design */}
-      <section id="features" className="py-20 sm:py-24 lg:py-32 bg-white relative overflow-hidden">
+      <section id="features" className="py-12 sm:py-16 md:py-20 lg:py-24 xl:py-32 bg-white relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #000 1px, transparent 0)', backgroundSize: '40px 40px' }}></div>
         </div>
 
-        <div className="container mx-auto px-4 relative">
+        <div className="container mx-auto px-3 sm:px-4 relative">
           {/* Section Header */}
-          <div className="text-center mb-16 lg:mb-20">
+          <div className="text-center mb-8 sm:mb-12 md:mb-16 lg:mb-20">
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
               <span className="text-sm font-black text-yellow-600 uppercase tracking-wider">Features</span>
               <div className="w-3 h-3 bg-yellow-400 rounded-full animate-pulse"></div>
             </div>
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-gray-900 mb-6 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <SparkleIcon className="w-10 h-10 sm:w-12 sm:h-12 text-yellow-500 animate-spin-slow" />
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-black text-gray-900 mb-4 sm:mb-5 md:mb-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 md:gap-4 leading-tight px-2">
+              <SparkleIcon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-yellow-500 animate-spin-slow" />
               <span>Why Choose ArenaQuest?</span>
             </h2>
-            <p className="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto font-semibold flex flex-wrap items-center justify-center gap-2">
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto font-semibold flex flex-wrap items-center justify-center gap-1 sm:gap-2 px-3">
               Everything you need to create interactive learning experiences and engaging events
-              <TargetIcon className="w-7 h-7 text-purple-600 animate-pulse" />
+              <TargetIcon className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-purple-600 animate-pulse flex-shrink-0" />
             </p>
           </div>
 
           {/* Feature Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-8 xl:gap-10">
             <FeatureCard
               icon={<AiIcon className="w-10 h-10" />}
               title="AI-Powered Questions"
@@ -217,27 +216,27 @@ const LandingScreen: React.FC<LandingScreenProps> = ({ setScreen }) => {
           </div>
 
           {/* Additional Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10">
-            <div className="text-center p-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl text-3xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-8 mt-6 sm:mt-8 md:mt-10">
+            <div className="text-center p-4 sm:p-5 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-xl text-2xl sm:text-3xl">
                 ⚡
               </div>
-              <h4 className="font-black text-xl text-gray-900 mb-2">Lightning Fast</h4>
-              <p className="text-gray-600 font-medium">Instant response tracking and real-time updates</p>
+              <h4 className="font-black text-lg sm:text-xl text-gray-900 mb-2">Lightning Fast</h4>
+              <p className="text-sm sm:text-base text-gray-600 font-medium">Instant response tracking and real-time updates</p>
             </div>
-            <div className="text-center p-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl text-3xl">
+            <div className="text-center p-4 sm:p-5 md:p-6 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-xl text-2xl sm:text-3xl">
                 🎨
               </div>
-              <h4 className="font-black text-xl text-gray-900 mb-2">Beautiful UI</h4>
-              <p className="text-gray-600 font-medium">Modern, intuitive interface that users love</p>
+              <h4 className="font-black text-lg sm:text-xl text-gray-900 mb-2">Beautiful UI</h4>
+              <p className="text-sm sm:text-base text-gray-600 font-medium">Modern, intuitive interface that users love</p>
             </div>
-            <div className="text-center p-6 animate-fade-in-up" style={{ animationDelay: '0.5s' }}>
-              <div className="w-16 h-16 bg-gradient-to-br from-pink-400 to-rose-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl text-3xl">
+            <div className="text-center p-4 sm:p-5 md:p-6 animate-fade-in-up sm:col-span-2 md:col-span-1" style={{ animationDelay: '0.5s' }}>
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-gradient-to-br from-pink-400 to-rose-500 rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-xl text-2xl sm:text-3xl">
                 🔒
               </div>
-              <h4 className="font-black text-xl text-gray-900 mb-2">Secure & Private</h4>
-              <p className="text-gray-600 font-medium">Enterprise-grade security for your data</p>
+              <h4 className="font-black text-lg sm:text-xl text-gray-900 mb-2">Secure & Private</h4>
+              <p className="text-sm sm:text-base text-gray-600 font-medium">Enterprise-grade security for your data</p>
             </div>
           </div>
         </div>
