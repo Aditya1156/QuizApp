@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { CrownIcon } from './icons/CrownIcon';
 import { MedalIcon } from './icons/MedalIcon';
 
@@ -13,8 +13,8 @@ interface LeaderboardProps {
   isLive?: boolean;
 }
 
-const Leaderboard: React.FC<LeaderboardProps> = ({ scores, currentUserId, isLive = false }) => {
-  const getRankIcon = (rank: number) => {
+const Leaderboard: React.FC<LeaderboardProps> = memo(({ scores, currentUserId, isLive = false }) => {
+  const getRankIcon = useMemo(() => (rank: number) => {
     switch (rank) {
       case 1:
         return <CrownIcon className="w-8 h-8 text-yellow-500" />;
@@ -25,20 +25,20 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ scores, currentUserId, isLive
       default:
         return <span className="text-2xl font-bold text-subtle-text">#{rank}</span>;
     }
-  };
+  }, []);
 
-  const getRankBg = (rank: number) => {
+  const getRankBg = useMemo(() => (rank: number) => {
     switch (rank) {
       case 1:
         return 'bg-gradient-to-r from-violet-600 to-purple-600 border-violet-500 text-white';
       case 2:
-        return 'bg-zinc-800 border-zinc-700';
+        return 'bg-gradient-to-r from-slate-700 to-slate-800 border-slate-600 text-white';
       case 3:
-        return 'bg-zinc-800 border-zinc-700';
+        return 'bg-gradient-to-r from-amber-700 to-orange-700 border-amber-600 text-white';
       default:
-        return 'bg-zinc-800 border-zinc-700';
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 border-gray-300 text-gray-900';
     }
-  };
+  }, []);
 
   return (
     <div className="w-full">
@@ -96,6 +96,8 @@ const Leaderboard: React.FC<LeaderboardProps> = ({ scores, currentUserId, isLive
       </div>
     </div>
   );
-};
+});
+
+Leaderboard.displayName = 'Leaderboard';
 
 export default Leaderboard;

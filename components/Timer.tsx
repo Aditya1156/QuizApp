@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { playSound } from '../utils/sounds';
 
 interface TimerProps {
@@ -10,20 +10,19 @@ interface TimerProps {
 }
 
 const Timer: React.FC<TimerProps> = ({ duration, onTimeUp, isPaused, startedAt }) => {
-  const computeInitial = () => {
+  const computeInitial = useCallback(() => {
     if (startedAt && typeof startedAt === 'number') {
       const elapsed = Math.floor((Date.now() - startedAt) / 1000);
       return Math.max(0, duration - elapsed);
     }
     return duration;
-  };
+  }, [duration, startedAt]);
 
   const [timeLeft, setTimeLeft] = useState<number>(computeInitial());
 
   useEffect(() => {
     setTimeLeft(computeInitial());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [duration, startedAt]);
+  }, [computeInitial]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -57,16 +56,22 @@ const Timer: React.FC<TimerProps> = ({ duration, onTimeUp, isPaused, startedAt }
           return next;
         });
       }
-    }, 500);
+    }, 1000); // Reduced from 500ms to 1000ms for better performance
 
     return () => clearInterval(intervalId);
   }, [timeLeft, isPaused, onTimeUp, duration, startedAt]);
 
   const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (timeLeft / duration) * circumference;
+  const circumference = useMemo(() => 2 * Math.PI * radius, []);
+  const strokeDashoffset = useMemo(() => 
+    circumference - (timeLeft / duration) * circumference, 
+    [circumference, timeLeft, duration]
+  );
 
-  const timeColor = timeLeft <= 5 ? 'text-red-500' : 'text-gray-900';
+  const timeColor = useMemo(() => 
+    timeLeft <= 5 ? 'text-red-500' : 'text-gray-900', 
+    [timeLeft]
+  );
 
   return (
     <div className="relative w-32 h-32">

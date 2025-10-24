@@ -4,6 +4,8 @@ import { Screen, UserRole } from '../hooks/useQuiz';
 import Button from '../components/Button';
 import Leaderboard from '../components/Leaderboard';
 import { playSound } from '../utils/sounds';
+import { TrophyIcon } from '../components/icons/TrophyIcon';
+import { ChartIcon } from '../components/icons/ChartIcon';
 
 // A new component for the expand/collapse icon
 const ChevronIcon = ({ isExpanded }: { isExpanded: boolean }) => (
@@ -64,7 +66,7 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ setScreen, userRole }) =>
   <div className="w-full max-w-4xl p-8 bg-white border-2 border-gray-200 rounded-3xl shadow-xl animate-fade-in-up">
       <div className="text-center mb-6">
         <div className="w-20 h-20 rounded-full bg-yellow-400 flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <span className="text-4xl">{isQuizEnded ? '🏆' : '📊'}</span>
+          {isQuizEnded ? <TrophyIcon className="w-10 h-10" /> : <ChartIcon className="w-10 h-10" />}
         </div>
         <h2 className="text-4xl font-extrabold mb-2 text-gray-900">
           {isQuizEnded ? 'Final Results' : 'Live Leaderboard'}
@@ -78,9 +80,10 @@ const ResultsScreen: React.FC<ResultsScreenProps> = ({ setScreen, userRole }) =>
       <div className="flex justify-center mb-6">
         <button
           onClick={() => setShowDetailedView(!showDetailedView)}
-          className="px-6 py-3 min-h-[44px] rounded-full bg-gray-100 hover:bg-gray-200 transition-colors font-semibold text-gray-900 border-2 border-gray-300"
+          className="px-6 py-3 min-h-[44px] rounded-full bg-gray-100 hover:bg-gray-200 transition-colors font-semibold text-gray-900 border-2 border-gray-300 flex items-center justify-center gap-2"
         >
-          {showDetailedView ? '📊 Simple View' : '📋 Detailed View'}
+          <ChartIcon className="w-5 h-5" />
+          <span>{showDetailedView ? 'Simple View' : 'Detailed View'}</span>
         </button>
       </div>
 

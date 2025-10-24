@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { QuizRoom, QuizContextType, Question, Student, Response, QuizStatus } from '../types';
 import { DEFAULT_QUIZ_QUESTIONS } from '../constants';
-import { dbSet, dbOnValue, dbPush, dbUpdate, database } from '../firebase';
+import { dbSet, dbOnValue, dbPush, dbUpdate, database, auth } from '../firebase';
 import { ref, get, query, orderByChild, equalTo } from 'firebase/database';
 
 export type UserRole = 'admin' | 'student';
@@ -14,8 +14,9 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // If a room is set locally, listen for remote updates to keep in sync
   useEffect(() => {
-    if (!quizRoom) return;
-    const path = `/rooms/${quizRoom.id}`;
+    if (!quizRoom?.id) return;
+    const roomId = quizRoom.id; // Store ID to avoid dependency on full quizRoom object
+    const path = `/rooms/${roomId}`;
     const unsubscribe = dbOnValue(path, (val) => {
       if (!val) return;
       // Normalize responses: Firebase may return it as object, convert to array
@@ -38,11 +39,13 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [quizRoom?.id]); // Only re-subscribe when room ID changes, not on every quizRoom update
 
   const createRoom = (name: string, questions: Question[], mode?: 'option-only' | string) => {
+    const adminId = auth.currentUser?.uid; // Get current admin's user ID
     const newRoom: QuizRoom = {
       id: Date.now().toString(),
       name,
       code: Math.random().toString(36).substring(2, 8).toUpperCase(),
       mode: mode ?? 'option-only',
+      adminId, // Store admin ID to prevent them from joining as student
       questions,
       status: 'waiting',
       currentQuestionIndex: 0,
@@ -71,38 +74,71 @@ export const QuizProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const findRoomByCode = async (code: string): Promise<QuizRoom | null> => {
     try {
       console.log('Searching for room with code:', code);
+      
+      // Optimized: Use Firebase query with orderByChild for faster lookup
+      // Note: Requires Firebase database index on 'code' field
       const roomsRef = ref(database, 'rooms');
-      const snapshot = await get(roomsRef);
+      const roomQuery = query(roomsRef, orderByChild('code'), equalTo(code));
+      const snapshot = await get(roomQuery);
       
       if (snapshot.exists()) {
         const rooms = snapshot.val();
-        // Search through all rooms to find matching code
+        // Should only return one room, but iterate to be safe
         for (const roomId in rooms) {
           const room = rooms[roomId];
-          if (room.code === code) {
-            console.log('Found room:', room);
-            // Normalize responses and students arrays from Firebase object format
-            const normalized = {
-              ...room,
-              responses: Array.isArray(room.responses) 
-                ? room.responses 
-                : room.responses 
-                  ? Object.values(room.responses) 
-                  : [],
-              students: Array.isArray(room.students) 
-                ? room.students 
-                : room.students 
-                  ? Object.values(room.students) 
-                  : [],
-            };
-            return normalized as QuizRoom;
+          console.log('Found room:', room);
+          
+          // Validate room status - don't allow joining ended rooms
+          if (room.status === 'ended') {
+            console.log('Room has ended, cannot join');
+            return null;
           }
+          
+          // Normalize responses and students arrays from Firebase object format
+          const normalized = {
+            ...room,
+            responses: Array.isArray(room.responses) 
+              ? room.responses 
+              : room.responses 
+                ? Object.values(room.responses) 
+                : [],
+            students: Array.isArray(room.students) 
+              ? room.students 
+              : room.students 
+                ? Object.values(room.students) 
+                : [],
+          };
+          return normalized as QuizRoom;
         }
       }
+      
       console.log('No room found with code:', code);
       return null;
     } catch (error) {
       console.error('Error finding room:', error);
+      // Fallback to linear search if indexed query fails
+      console.warn('Falling back to linear search...');
+      try {
+        const roomsRef = ref(database, 'rooms');
+        const snapshot = await get(roomsRef);
+        
+        if (snapshot.exists()) {
+          const rooms = snapshot.val();
+          for (const roomId in rooms) {
+            const room = rooms[roomId];
+            if (room.code === code && room.status !== 'ended') {
+              const normalized = {
+                ...room,
+                responses: Array.isArray(room.responses) ? room.responses : room.responses ? Object.values(room.responses) : [],
+                students: Array.isArray(room.students) ? room.students : room.students ? Object.values(room.students) : [],
+              };
+              return normalized as QuizRoom;
+            }
+          }
+        }
+      } catch (fallbackError) {
+        console.error('Fallback search also failed:', fallbackError);
+      }
       return null;
     }
   };

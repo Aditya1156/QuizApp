@@ -28,6 +28,8 @@ export interface QuizRoom {
   code: string;
   // mode of the quiz: option-only for multiple-choice; other modes can be added later
   mode?: 'option-only' | string;
+  // admin user ID who created this room
+  adminId?: string;
   questions: Question[];
   status: QuizStatus;
   currentQuestionIndex: number;

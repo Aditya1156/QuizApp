@@ -6,14 +6,18 @@ import Input from '../components/Input';
 import QRScanner from '../components/QRScanner';
 import { QrCode } from 'lucide-react';
 import { soundManager } from '../utils/sounds';
+import { GraduationCapIcon } from '../components/icons/GraduationCapIcon';
+import { useAuth } from '../hooks/useAuth';
 
 interface StudentJoinScreenProps {
   setScreen: (screen: Screen) => void;
   initialRoomCode?: string;
+  setUserRole: (role: 'student') => void;
 }
 
-const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initialRoomCode }) => {
+const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initialRoomCode, setUserRole }) => {
   const { joinRoom, quizRoom } = useQuiz();
+  const { user, isAdmin } = useAuth();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -40,14 +44,21 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
     try {
       const student = await joinRoom(name.trim(), code.trim().toUpperCase());
       if (student) {
+        // Check if the user is an admin trying to join their own quiz
+        if (user && quizRoom?.adminId === user.uid) {
+          setError('⚠️ You are the Quiz Master of this room! You cannot join as a student. Please use the Admin Dashboard to manage this quiz.');
+          return;
+        }
+        
         setError('');
+        setUserRole('student'); // Set user role when successfully joining
         setScreen('lobby');
       } else {
-        setError('Invalid room code. Please check and try again.');
+        setError('Room not found or has ended. Please check the code or ask the Quiz Master for a new room.');
       }
     } catch (err) {
       console.error('Join error:', err);
-      setError('Failed to join room. Please try again.');
+      setError('Failed to join room. The quiz may have ended or the room code is invalid.');
     }
   };
 
@@ -79,10 +90,17 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
         try {
           const student = await joinRoom(name.trim(), roomCode.toUpperCase());
           if (student) {
+            // Check if the user is an admin trying to join their own quiz
+            if (user && quizRoom?.adminId === user.uid) {
+              setError('⚠️ You are the Quiz Master of this room! You cannot join as a student. Please use the Admin Dashboard to manage this quiz.');
+              return;
+            }
+            
             setError('');
+            setUserRole('student'); // Set user role when successfully joining via QR
             setScreen('lobby');
           } else {
-            setError('Invalid room code. Please check and try again.');
+            setError('Room not found or has ended. Please scan again or enter code manually.');
           }
         } catch (err) {
           console.error('Join error:', err);
@@ -107,7 +125,7 @@ const StudentJoinScreen: React.FC<StudentJoinScreenProps> = ({ setScreen, initia
       <div className="w-full max-w-md p-8 bg-white border-2 border-gray-200 rounded-3xl shadow-xl animate-fade-in-up">
         <div className="flex items-center justify-center mb-4">
           <div className="w-16 h-16 rounded-full bg-cyan-200 flex items-center justify-center shadow-lg">
-            <span className="text-3xl">🎓</span>
+            <GraduationCapIcon className="w-10 h-10 text-gray-900" />
           </div>
         </div>
         <h2 className="text-3xl font-bold mb-2 text-center text-gray-900">Join Quiz</h2>

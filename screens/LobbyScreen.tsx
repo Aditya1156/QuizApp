@@ -1,45 +1,90 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef, memo } from 'react';
 import { useQuiz } from '../hooks/useQuiz';
 import { Screen, UserRole } from '../hooks/useQuiz';
 import Button from '../components/Button';
 import { playSound } from '../utils/sounds';
 import { QRCodeSVG } from 'qrcode.react';
+import ConfirmDialog from '../components/ConfirmDialog';
+import { useBeforeUnload, useNavigationWarning } from '../hooks/useBeforeUnload';
 
 interface LobbyScreenProps {
   setScreen: (screen: Screen) => void;
   userRole: UserRole | null;
 }
 
-const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
-  const { quizRoom, startQuiz } = useQuiz();
+const LobbyScreen: React.FC<LobbyScreenProps> = memo(({ setScreen, userRole }) => {
+  const { quizRoom, startQuiz, cancelQuiz } = useQuiz();
   const [countdown, setCountdown] = useState<number | null>(null);
   const [copySuccess, setCopySuccess] = useState(false);
   const [readyPlayers, setReadyPlayers] = useState<Set<string>>(new Set());
   const [showQuizPreview, setShowQuizPreview] = useState(false);
-  const roomLink = React.useMemo(() => {
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<Screen | null>(null);
+  const prevStudentCountRef = useRef<number>(0);
+
+  // Warn admin before leaving (browser close/refresh)
+  useBeforeUnload(
+    userRole === 'admin' && !!quizRoom,
+    'Your quiz room will be closed if you leave. Students will be disconnected.'
+  );
+
+  // Only enable navigation warning after room is created
+  const [navigationEnabled, setNavigationEnabled] = React.useState(false);
+
+  React.useEffect(() => {
+    if (quizRoom && userRole === 'admin') {
+      // Small delay to prevent triggering on room creation
+      const timer = setTimeout(() => {
+        setNavigationEnabled(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [quizRoom, userRole]);
+
+  // Warn admin before navigating back in app
+  const handleNavWarning = useCallback(() => {
+    setShowExitConfirm(true);
+    return false; // Prevent navigation
+  }, []);
+  
+  useNavigationWarning(navigationEnabled, handleNavWarning);
+  
+  const roomLink = useMemo(() => {
     if (typeof window === 'undefined') return '';
     const base = `${window.location.origin}${window.location.pathname}`;
     return quizRoom?.code ? `${base}?room=${quizRoom.code}` : `${base}`;
   }, [quizRoom?.code]);
 
-  React.useEffect(() => {
-    console.log('LobbyScreen mounted, userRole:', userRole, 'quizRoom:', quizRoom);
-  }, []);
+  const studentCount = useMemo(() => quizRoom?.students?.length || 0, [quizRoom?.students]);
 
-  React.useEffect(() => {
+  // Mount effect - log only once
+  useEffect(() => {
+    console.log('LobbyScreen mounted, userRole:', userRole);
+  }, [userRole]);
+
+  // Handle status change
+  useEffect(() => {
     if (quizRoom?.status === 'active') {
       console.log('Quiz status changed to active, navigating to quiz screen');
       setScreen('quiz');
     }
   }, [quizRoom?.status, setScreen]);
 
-  React.useEffect(() => {
+  // Handle missing room
+  useEffect(() => {
     if (!quizRoom) {
       console.log('No quiz room found, redirecting to home');
       setScreen('home');
-      return;
     }
   }, [quizRoom, setScreen]);
+
+  // Play join sound when new students join (only when count increases)
+  useEffect(() => {
+    if (studentCount > prevStudentCountRef.current && prevStudentCountRef.current > 0) {
+      playSound('join');
+    }
+    prevStudentCountRef.current = studentCount;
+  }, [studentCount]);
 
   if (!quizRoom) {
     return (
@@ -51,19 +96,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     );
   }
 
-  const studentCount = quizRoom.students?.length || 0;
-  console.log('Rendering lobby with room:', quizRoom.name, 'Code:', quizRoom.code, 'Students:', studentCount);
-
-  // Play join sound when new students join
-  useEffect(() => {
-    if (studentCount > 0) {
-      playSound('join');
-    }
-  }, [studentCount]);
-
-  const handleStartQuiz = () => {
+  const handleStartQuiz = useCallback(() => {
     // start a short countdown for nicer UX, then call startQuiz
-    if ((quizRoom?.students?.length || 0) === 0) {
+    if (studentCount === 0) {
       // fallback: still call startQuiz if no players (admin choice)
       startQuiz();
       return;
@@ -71,7 +106,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
 
     setCountdown(5);
     playSound('countdown'); // Play countdown sound when starting
-  };
+  }, [studentCount, startQuiz]);
 
   // countdown effect: when it reaches 0, fire startQuiz()
   useEffect(() => {
@@ -86,7 +121,7 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     return () => clearTimeout(timer);
   }, [countdown, startQuiz]);
 
-  const handleCopyLink = async () => {
+  const handleCopyLink = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(roomLink);
       setCopySuccess(true);
@@ -96,9 +131,9 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     } catch (e) {
       console.error('copy failed', e);
     }
-  };
+  }, [roomLink]);
 
-  const handleCopyCode = async () => {
+  const handleCopyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(quizRoom?.code || '');
       playSound('success');
@@ -106,39 +141,39 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
     } catch (e) {
       console.error('copy failed', e);
     }
-  };
+  }, [quizRoom?.code]);
 
   return (
-  <div className="w-full max-w-5xl animate-fade-in-up space-y-6 px-4">
+  <div className="w-full max-w-5xl animate-fade-in-up space-y-4 sm:space-y-5 md:space-y-6 px-3 sm:px-4">
     {/* Main Lobby Card */}
-    <div className="bg-white border-2 border-gray-200 rounded-3xl shadow-xl p-6 md:p-8">
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 rounded-full bg-yellow-400 flex items-center justify-center mx-auto mb-4 shadow-lg animate-bounce">
-          <span className="text-3xl">🎮</span>
+    <div className="bg-white border-2 border-gray-200 rounded-2xl sm:rounded-3xl shadow-xl p-4 sm:p-5 md:p-6 lg:p-8">
+      <div className="text-center mb-4 sm:mb-5 md:mb-6">
+        <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full bg-yellow-400 flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg animate-bounce">
+          <span className="text-2xl sm:text-3xl">🎮</span>
         </div>
-        <h2 className="text-3xl sm:text-4xl font-bold mb-2 text-gray-900">✨ Quiz Lobby</h2>
-        <p className="text-lg sm:text-2xl text-yellow-600 font-bold mb-4">{quizRoom.name}</p>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-gray-900 leading-tight">✨ Quiz Lobby</h2>
+        <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-yellow-600 font-bold mb-3 sm:mb-4 px-2 break-words">{quizRoom.name}</p>
         
         {/* Room Code Section with Enhanced Design */}
-        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-6 rounded-2xl mb-4 border-2 border-yellow-300 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-200 rounded-full -mr-16 -mt-16 opacity-50"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-yellow-200 rounded-full -ml-12 -mb-12 opacity-50"></div>
+        <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 sm:p-5 md:p-6 rounded-xl sm:rounded-2xl mb-3 sm:mb-4 border-2 border-yellow-300 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 bg-yellow-200 rounded-full -mr-10 sm:-mr-12 md:-mr-16 -mt-10 sm:-mt-12 md:-mt-16 opacity-50"></div>
+          <div className="absolute bottom-0 left-0 w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-yellow-200 rounded-full -ml-8 sm:-ml-10 md:-ml-12 -mb-8 sm:-mb-10 md:-mb-12 opacity-50"></div>
           <div className="relative z-10">
-            <p className="text-sm sm:text-base text-gray-700 mb-2 font-semibold flex items-center justify-center gap-2">
+            <p className="text-xs sm:text-sm md:text-base text-gray-700 mb-1 sm:mb-2 font-semibold flex items-center justify-center gap-1 sm:gap-2">
               🔑 ROOM CODE
             </p>
-            <p className="text-4xl sm:text-6xl font-mono font-black tracking-widest text-gray-900 animate-pulse mb-3">
+            <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-mono font-black tracking-wider sm:tracking-widest text-gray-900 animate-pulse mb-2 sm:mb-3 break-all">
               {quizRoom.code}
             </p>
             
             {/* QR Code for Admin */}
             {userRole === 'admin' && (
-              <div className="flex justify-center mb-4">
-                <div className="bg-white p-4 rounded-2xl border-4 border-yellow-400 shadow-lg">
+              <div className="flex justify-center mb-3 sm:mb-4">
+                <div className="bg-white p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-yellow-400 shadow-lg">
                   <QRCodeSVG
                     key={quizRoom?.code ?? 'no-code'}
                     value={roomLink}
-                    size={180}
+                    size={Math.min(180, window.innerWidth - 100)}
                     level="H"
                     includeMargin={true}
                     fgColor="#111827"
@@ -149,90 +184,90 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
               </div>
             )}
             
-            <div className="flex gap-2 justify-center flex-wrap">
+            <div className="flex gap-2 sm:gap-2.5 justify-center flex-wrap">
               <button
                 onClick={handleCopyCode}
-                className="px-4 py-2 bg-white hover:bg-yellow-50 text-gray-900 rounded-xl font-semibold text-sm border-2 border-yellow-400 transition-all hover:scale-105 shadow-md"
+                className="px-3 py-2 sm:px-4 sm:py-2.5 bg-white hover:bg-yellow-50 text-gray-900 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm border-2 border-yellow-400 transition-all hover:scale-105 active:scale-95 shadow-md touch-manipulation min-h-[44px] flex items-center justify-center"
               >
                 📋 Copy Code
               </button>
               <button
                 onClick={handleCopyLink}
-                className="px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-xl font-semibold text-sm transition-all hover:scale-105 shadow-md"
+                className="px-3 py-2 sm:px-4 sm:py-2.5 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg sm:rounded-xl font-semibold text-xs sm:text-sm transition-all hover:scale-105 active:scale-95 shadow-md touch-manipulation min-h-[44px] flex items-center justify-center"
               >
                 {copySuccess ? '✅ Copied!' : '🔗 Copy Link'}
               </button>
             </div>
-            <p className="text-xs sm:text-sm text-gray-600 mt-3">Share this code or link with participants to join</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 px-2">Share this code or link with participants to join</p>
           </div>
         </div>
       </div>
       
       {/* Quiz Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-4 rounded-xl border-2 border-cyan-200 text-center">
-          <div className="text-3xl mb-2">📝</div>
-          <div className="text-2xl font-black text-gray-900">{quizRoom.questions?.length || 0}</div>
-          <div className="text-sm text-gray-600 font-semibold">Questions</div>
+      <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-5 md:mb-6">
+        <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-cyan-200 text-center">
+          <div className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">📝</div>
+          <div className="text-lg sm:text-xl md:text-2xl font-black text-gray-900">{quizRoom.questions?.length || 0}</div>
+          <div className="text-xs sm:text-sm text-gray-600 font-semibold">Questions</div>
         </div>
         
-        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl border-2 border-purple-200 text-center">
-          <div className="text-3xl mb-2">⏱️</div>
-          <div className="text-2xl font-black text-gray-900">
+        <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-purple-200 text-center">
+          <div className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">⏱️</div>
+          <div className="text-lg sm:text-xl md:text-2xl font-black text-gray-900">
             {Math.round((quizRoom.questions?.reduce((acc, q) => acc + q.timeLimit, 0) || 0) / 60)}m
           </div>
-          <div className="text-sm text-gray-600 font-semibold">Total Time</div>
+          <div className="text-xs sm:text-sm text-gray-600 font-semibold">Total Time</div>
         </div>
         
-        <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl border-2 border-green-200 text-center">
-          <div className="text-3xl mb-2">🎯</div>
-          <div className="text-2xl font-black text-gray-900">{quizRoom.mode === 'option-only' ? 'Fast' : 'Standard'}</div>
-          <div className="text-sm text-gray-600 font-semibold">Mode</div>
+        <div className="bg-gradient-to-br from-green-50 to-green-100 p-3 sm:p-4 rounded-lg sm:rounded-xl border-2 border-green-200 text-center">
+          <div className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">🎯</div>
+          <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-black text-gray-900 leading-tight">{quizRoom.mode === 'option-only' ? 'Fast' : 'Standard'}</div>
+          <div className="text-xs sm:text-sm text-gray-600 font-semibold">Mode</div>
         </div>
       </div>
 
       {/* Participants Section */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <span className="text-2xl">👥</span>
-            Participants
+      <div className="mb-4 sm:mb-5 md:mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2">
+          <h3 className="text-lg sm:text-xl font-bold text-gray-900 flex items-center gap-2">
+            <span className="text-xl sm:text-2xl">👥</span>
+            <span>Participants</span>
           </h3>
           <div className="flex items-center gap-2">
-            <span className="bg-yellow-400 text-gray-900 px-4 py-2 rounded-full font-bold text-base shadow-md">
+            <span className="bg-yellow-400 text-gray-900 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-bold text-sm sm:text-base shadow-md">
               {studentCount} {studentCount === 1 ? 'Player' : 'Players'}
             </span>
           </div>
         </div>
         
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-2xl min-h-[240px] max-h-[320px] overflow-y-auto border-2 border-gray-200">
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-3 sm:p-4 rounded-xl sm:rounded-2xl min-h-[200px] sm:min-h-[240px] max-h-[280px] sm:max-h-[320px] overflow-y-auto border-2 border-gray-200">
           {studentCount > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-2 sm:gap-3">
               {quizRoom.students?.map((student, idx) => (
                 <div 
                   key={student.id} 
-                  className="text-gray-900 bg-white p-4 rounded-xl animate-fade-in flex items-center justify-between shadow-md hover:shadow-lg transition-all border-2 border-gray-200 hover:border-yellow-400 group"
+                  className="text-gray-900 bg-white p-3 sm:p-4 rounded-lg sm:rounded-xl animate-fade-in flex items-center justify-between shadow-md hover:shadow-lg transition-all border-2 border-gray-200 hover:border-yellow-400 group touch-manipulation"
                   style={{ animationDelay: `${idx * 50}ms` }}
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center text-white font-black text-lg shadow-md group-hover:scale-110 transition-transform">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-cyan-400 to-cyan-500 rounded-full flex items-center justify-center text-white font-black text-base sm:text-lg shadow-md group-hover:scale-110 transition-transform flex-shrink-0">
                       {student.name.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <span className="font-bold text-base block">{student.name}</span>
+                    <div className="min-w-0 flex-1">
+                      <span className="font-bold text-sm sm:text-base block truncate">{student.name}</span>
                       <span className="text-xs text-gray-500">Ready to play 🎯</span>
                     </div>
                   </div>
-                  <span className="text-green-500 text-2xl group-hover:scale-125 transition-transform">✓</span>
+                  <span className="text-green-500 text-xl sm:text-2xl group-hover:scale-125 transition-transform flex-shrink-0 ml-2">✓</span>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center pt-20">
-              <div className="text-6xl mb-4 animate-bounce">⏳</div>
-              <p className="text-gray-700 font-bold text-lg mb-2">Waiting for participants to join...</p>
-              <p className="text-sm text-gray-500">Students should enter the room code above</p>
-              <div className="mt-6 flex items-center justify-center gap-2 text-gray-400">
+            <div className="text-center pt-12 sm:pt-16 md:pt-20">
+              <div className="text-4xl sm:text-5xl md:text-6xl mb-3 sm:mb-4 animate-bounce">⏳</div>
+              <p className="text-gray-700 font-bold text-base sm:text-lg mb-1 sm:mb-2 px-2">Waiting for participants to join...</p>
+              <p className="text-xs sm:text-sm text-gray-500 px-2">Students should enter the room code above</p>
+              <div className="mt-4 sm:mt-6 flex items-center justify-center gap-2 text-gray-400">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
@@ -244,31 +279,31 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
 
       {/* Action Buttons */}
       {userRole === 'admin' && (
-        <div className="space-y-3">
-          <div className="flex gap-3">
+        <div className="space-y-2 sm:space-y-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Button 
               onClick={handleStartQuiz} 
               disabled={studentCount === 0}
-              className="flex-1"
+              className="flex-1 !min-h-[48px] sm:!min-h-[52px] touch-manipulation text-sm sm:text-base"
             >
               {studentCount === 0 ? '⏳ Waiting for players' : `🚀 Start Quiz (${studentCount} player${studentCount > 1 ? 's' : ''})`}
             </Button>
             <button
               onClick={() => setShowQuizPreview(!showQuizPreview)}
-              className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-xl font-semibold transition-all border-2 border-gray-300"
+              className="px-4 sm:px-6 py-3 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-900 rounded-lg sm:rounded-xl font-semibold transition-all border-2 border-gray-300 touch-manipulation min-h-[48px] sm:min-h-[52px] text-sm sm:text-base"
             >
               {showQuizPreview ? '👁️ Hide' : '👁️ Preview'}
             </button>
           </div>
-          <div className="flex items-center justify-center gap-4 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 md:gap-4 text-xs text-gray-500 px-2">
+            <span className="flex items-center gap-1 whitespace-nowrap">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
               System Ready
             </span>
-            <span>•</span>
-            <span>{quizRoom.questions?.length || 0} questions loaded</span>
-            <span>•</span>
-            <span className="text-yellow-600 font-semibold">Waiting for your command ⚡</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="whitespace-nowrap">{quizRoom.questions?.length || 0} questions loaded</span>
+            <span className="hidden sm:inline">•</span>
+            <span className="text-yellow-600 font-semibold whitespace-nowrap">Waiting for your command ⚡</span>
           </div>
         </div>
       )}
@@ -338,8 +373,34 @@ const LobbyScreen: React.FC<LobbyScreenProps> = ({ setScreen, userRole }) => {
         </div>
       </div>
     )}
+
+    {/* Exit Confirmation Dialog for Admin */}
+    {userRole === 'admin' && (
+      <ConfirmDialog
+        isOpen={showExitConfirm}
+        title="Leave Quiz Room?"
+        message="If you leave now, the quiz room will be closed and all students will be disconnected. Are you sure?"
+        confirmText="Close Room & Leave"
+        cancelText="Stay in Room"
+        variant="danger"
+        onConfirm={() => {
+          // Cancel the quiz and notify students
+          if (quizRoom) {
+            cancelQuiz('Quiz Master has left the room. Quiz cancelled.');
+          }
+          setShowExitConfirm(false);
+          setScreen('admin_dashboard');
+        }}
+        onCancel={() => {
+          setShowExitConfirm(false);
+          setPendingNavigation(null);
+        }}
+      />
+    )}
   </div>
   );
-};
+});
+
+LobbyScreen.displayName = 'LobbyScreen';
 
 export default LobbyScreen;

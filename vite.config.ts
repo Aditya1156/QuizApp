@@ -18,6 +18,34 @@ export default defineConfig(({ mode }) => {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }
+      },
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              // Split heavy 3D libraries
+              'three': ['three'],
+              'postprocessing': ['postprocessing'],
+              // Split admin features
+              'admin': [
+                './screens/AdminDashboardScreen',
+                './screens/AdminLoginScreen',
+                './screens/AdminSignupScreen'
+              ],
+              // Split QR code features
+              'qr': [
+                './components/QRScanner',
+                './screens/LobbyScreen'
+              ],
+              // Split 3D effects
+              'effects': [
+                './components/PixelBlast',
+                './components/ShaderBackground'
+              ]
+            }
+          }
+        },
+        chunkSizeWarningLimit: 1000
       }
     };
 });

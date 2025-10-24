@@ -11,33 +11,41 @@ const Button: React.FC<ButtonProps> = ({
   variant = 'primary', 
   size = 'md',
   className = '', 
+  disabled = false,
   ...props 
 }) => {
   // Base classes - inline-flex so buttons size to content by default; callers can force full width with `!w-full`
-  const baseClasses = "inline-flex items-center justify-center gap-2 font-bold rounded-full transition-all duration-200 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 shadow-md hover:shadow-lg";
+  const baseClasses = "group relative inline-flex items-center justify-center gap-2 font-black rounded-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 focus:outline-none focus:ring-4 focus:ring-offset-2 shadow-lg hover:shadow-2xl overflow-hidden";
   
   // Size classes - standard heights for touch targets
   const sizeClasses = {
-    sm: "h-8 px-4 text-sm min-h-[2rem]",
-    md: "h-11 px-6 text-base min-h-[2.75rem]",
-    lg: "h-14 px-8 text-lg min-h-[3.5rem]",
+    sm: "h-10 px-5 text-sm min-h-[2.5rem]",
+    md: "h-12 px-7 text-base min-h-[3rem]",
+    lg: "h-16 px-10 text-xl min-h-[4rem]",
   };
   
-  // Variant classes - solid colors matching the new design system
+  // Variant classes - modern gradients and effects
   const variantClasses = {
-    primary: "bg-yellow-400 text-gray-900 hover:bg-yellow-500 focus:ring-yellow-400",
-    secondary: "bg-gray-900 text-white hover:bg-gray-800 focus:ring-gray-700",
-    danger: "bg-red-500 text-white hover:bg-red-600 focus:ring-red-500",
-    success: "bg-green-500 text-white hover:bg-green-600 focus:ring-green-500",
-    outline: "bg-transparent text-gray-900 hover:bg-gray-100 border-2 border-gray-300 hover:border-gray-400 focus:ring-gray-300 shadow-none",
+    primary: "bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 hover:from-yellow-500 hover:to-yellow-600 focus:ring-yellow-400/50 shadow-yellow-400/30",
+    secondary: "bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-700 hover:to-gray-800 focus:ring-gray-700/50 shadow-gray-900/30",
+    danger: "bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 focus:ring-red-500/50 shadow-red-500/30",
+    success: "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 focus:ring-green-500/50 shadow-green-500/30",
+    outline: "bg-white text-gray-900 hover:bg-gray-50 border-2 border-gray-300 hover:border-yellow-400 focus:ring-yellow-400/30 shadow-md hover:shadow-xl",
   };
 
   return (
     <button
       className={`${baseClasses} ${sizeClasses[size]} ${variantClasses[variant]} ${className}`}
+      disabled={disabled}
       {...props}
     >
-      {children}
+      {/* Animated shine effect */}
+      {!disabled && (
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+      )}
+      <span className="relative z-10 flex items-center justify-center gap-2">
+        {children}
+      </span>
     </button>
   );
 };
