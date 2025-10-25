@@ -31,7 +31,7 @@
 ### 1. `types.ts`
 ```typescript
 export interface QuizRoom {
-  // ... existing fields
+  // ... existing fields kdjshfkjsdhfkjsdhfkjsdhfkjsdhkfhdshjf
   adminId?: string; // NEW: admin user ID who created this room
   // ... rest of fields
 }
