@@ -52,43 +52,41 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 h-screen w-80 bg-gradient-to-br from-white via-gray-50 to-white border-r-2 border-gray-200 z-50 transition-all duration-500 ease-out shadow-2xl ${
+        className={`fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-200 z-50 transition-all duration-300 ease-out shadow-lg ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         <div className="flex flex-col h-full max-h-screen">
           {/* Logo Section with Glassmorphism */}
-          <div className="relative p-6 border-b-2 border-gray-200 bg-gradient-to-r from-yellow-50 via-white to-yellow-50 backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-yellow-400/5"></div>
-            <div className="relative flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-500 flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl animate-bounce">✨</span>
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse"></div>
+          <div className="p-4 border-b border-gray-100 bg-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-yellow-400 flex items-center justify-center">
+                  <span className="text-lg">✨</span>
                 </div>
                 <div>
-                  <h1 className="text-xl font-black bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-500 bg-clip-text text-transparent animate-gradient">
+                  <h1 className="text-base font-bold text-gray-900">
                     ArenaQuest
                   </h1>
-                  <p className="text-xs text-gray-600 font-bold mt-0.5">
-                    {userRole === 'admin' ? '👑 Admin Control' : '🎯 Student Access'}
+                  <p className="text-xs text-gray-500">
+                    {userRole === 'admin' ? '👑 Admin Control' : '🎯 Student'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={onClose}
-                className="lg:hidden w-9 h-9 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 hover:from-red-100 hover:to-red-200 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-sm group"
+                className="lg:hidden w-8 h-8 rounded-lg bg-gray-100 hover:bg-red-100 flex items-center justify-center transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600 group-hover:text-red-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
 
           {/* Navigation Menu with Modern Cards */}
-          <nav className="flex-1 p-5 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-400 scrollbar-track-gray-100">
-            {menuItems.map((item, index) => {
+          <nav className="flex-1 p-3 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-400 scrollbar-track-gray-100">
+            {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = screen === item.id;
               const isDisabled = item.requiresRoom && !quizRoom;
@@ -98,57 +96,34 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
                   key={item.id}
                   onClick={() => handleNavigation(item.id, item.requiresRoom)}
                   disabled={isDisabled}
-                  style={{ animationDelay: `${index * 50}ms` }}
-                  className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all duration-300 group relative overflow-hidden animate-slide-in-left ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
                     isDisabled
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                      ? 'bg-gray-50 text-gray-400 cursor-not-allowed opacity-60'
                       : isActive
-                      ? `${item.color} text-white shadow-2xl scale-105 border-2 border-white/50`
-                      : 'bg-white hover:bg-gray-50 text-gray-700 shadow-md hover:shadow-xl hover:scale-102 border-2 border-gray-100 hover:border-yellow-300'
+                      ? 'bg-yellow-400 text-gray-900 shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-50'
                   }`}
                 >
-                  {/* Animated background gradient */}
-                  {!isDisabled && (
-                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-r ${
-                      isActive 
-                        ? 'from-white/10 via-white/5 to-transparent' 
-                        : 'from-yellow-50 via-transparent to-yellow-50'
-                    }`}></div>
-                  )}
-                  
-                  <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 ${
                     isDisabled
                       ? 'bg-gray-200'
                       : isActive 
-                      ? 'bg-white/20 shadow-lg group-hover:rotate-6' 
-                      : 'bg-gradient-to-br from-yellow-50 to-yellow-100 group-hover:from-yellow-100 group-hover:to-yellow-200 group-hover:-rotate-6'
+                      ? 'bg-white/30' 
+                      : 'bg-gray-100 group-hover:bg-yellow-50'
                   }`}>
-                    <Icon className={`w-7 h-7 transition-all duration-300 ${
+                    <Icon className={`w-4 h-4 ${
                       isDisabled 
                         ? 'text-gray-400' 
-                        : isActive ? 'text-white' : 'text-yellow-600 group-hover:scale-110'
+                        : isActive ? 'text-gray-900' : 'text-gray-600 group-hover:text-yellow-600'
                     }`} />
                   </div>
-                  <div className="flex-1 text-left relative">
-                    <span className={`font-black text-lg block transition-colors ${
-                      isDisabled ? 'text-gray-400' : isActive ? 'text-white' : 'text-gray-900 group-hover:text-yellow-600'
-                    }`}>
-                      {item.label}
-                    </span>
-                    {isDisabled && (
-                      <span className="text-xs text-gray-400 font-medium">⚠️ Requires active quiz</span>
-                    )}
-                    {!isDisabled && !isActive && (
-                      <span className="text-xs text-gray-500 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                        Click to navigate →
-                      </span>
-                    )}
-                  </div>
+                  <span className={`text-sm font-semibold ${
+                    isDisabled ? 'text-gray-400' : isActive ? 'text-gray-900' : 'text-gray-700'
+                  }`}>
+                    {item.label}
+                  </span>
                   {isActive && !isDisabled && (
-                    <div className="relative">
-                      <div className="w-3 h-3 rounded-full bg-green-400 animate-ping absolute"></div>
-                      <div className="w-3 h-3 rounded-full bg-green-500 shadow-lg shadow-green-500/50"></div>
-                    </div>
+                    <div className="ml-auto w-2 h-2 rounded-full bg-green-500"></div>
                   )}
                 </button>
               );
@@ -156,30 +131,23 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
           </nav>
 
           {/* User Info Section with Enhanced Profile Card */}
-          <div className="p-5 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 via-white to-gray-50">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/20 via-transparent to-yellow-400/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="relative flex items-center gap-4 px-4 py-4 rounded-2xl bg-white border-2 border-gray-200 shadow-md hover:shadow-xl transition-all duration-300 hover:scale-102">
-                <div className={`relative w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-lg transform group-hover:scale-110 transition-transform duration-300 ${
-                  userRole === 'admin' 
-                    ? 'bg-gradient-to-br from-yellow-400 to-yellow-500 text-white' 
-                    : 'bg-gradient-to-br from-cyan-400 to-cyan-500 text-white'
-                }`}>
-                  {userRole === 'admin' ? '👑' : '🎓'}
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-                    <span className="text-white text-xs animate-pulse">●</span>
-                  </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-base font-black text-gray-900 truncate">
-                    {userRole === 'admin' ? 'Administrator' : 'Student'}
-                  </p>
-                  <p className="text-xs text-gray-500 font-semibold truncate flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
-                    {userRole === 'admin' ? '✨ Full Access' : '⚡ Active Participant'}
-                  </p>
-                </div>
-                <div className="w-2 h-2 bg-yellow-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity animate-pulse"></div>
+          <div className="p-3 border-t border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-gray-200">
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold ${
+                userRole === 'admin' 
+                  ? 'bg-yellow-400 text-gray-900' 
+                  : 'bg-cyan-400 text-white'
+              }`}>
+                {userRole === 'admin' ? '👑' : '🎓'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-gray-900 truncate">
+                  {userRole === 'admin' ? 'Administrator' : 'Student'}
+                </p>
+                <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                  {userRole === 'admin' ? 'Full Access' : 'Active'}
+                </p>
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { QuizIcon } from './icons/QuizIcon';
 import { Screen, useQuiz } from '../hooks/useQuiz';
 import { useAuth } from '../hooks/useAuth';
@@ -18,7 +18,49 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
   const { quizRoom, cancelQuiz } = useQuiz();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const isLandingPage = screen === 'landing';
+
+  // Auto-hide menu on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (showUserMenu) {
+        setShowUserMenu(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showUserMenu]);
+
+  // Auto-hide menu on ESC key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showUserMenu) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showUserMenu]);
+
+  // Auto-hide menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
   
   // Define simple linear flows for navigation (used by Prev / Next buttons)
   const studentFlow: Screen[] = ['home', 'student_join', 'lobby', 'quiz', 'results'];
@@ -161,7 +203,7 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
 
               {/* User Menu or Login Button */}
               {user ? (
-                <div className="relative">
+                <div className="relative" ref={menuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-2 lg:space-x-3 bg-gradient-to-br from-gray-50 to-gray-100 hover:from-gray-100 hover:to-gray-200 text-gray-900 pl-2 pr-3 lg:pr-4 py-2 rounded-full font-bold transition-all duration-200 border-2 border-gray-200 hover:border-yellow-400 shadow-sm hover:shadow-md"
@@ -176,13 +218,8 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
                   </button>
 
                   {showUserMenu && (
-                    <>
-                      <div 
-                        className="fixed inset-0 z-40" 
-                        onClick={() => setShowUserMenu(false)}
-                      ></div>
-                      <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-50 overflow-hidden backdrop-blur-sm">
-                        <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-white">
+                    <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl border border-gray-200/50 py-2 z-50 overflow-hidden backdrop-blur-sm animate-scale-in">
+                      <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-br from-gray-50 to-white">
                           <p className="text-sm font-bold text-gray-900">{user.displayName || 'User'}</p>
                           <p className="text-xs text-gray-500 truncate mt-0.5">{user.email}</p>
                           {isAdmin && (
@@ -228,7 +265,6 @@ const Header: React.FC<HeaderProps> = ({ screen, setScreen, onMenuClick, showMen
                           </button>
                         </div>
                       </div>
-                    </>
                   )}
                 </div>
               ) : (

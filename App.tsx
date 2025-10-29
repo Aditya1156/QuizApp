@@ -39,6 +39,18 @@ function AppContent() {
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Close sidebar on scroll or when clicking navigation item
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [sidebarOpen]);
+
   const renderScreen = () => {
     switch (screen) {
       case 'landing':
@@ -114,7 +126,7 @@ function AppContent() {
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col ${showSidebar ? 'lg:ml-72' : ''} relative z-10 min-h-screen`}>
+      <div className={`flex-1 flex flex-col ${showSidebar ? 'lg:ml-64' : ''} relative z-10 min-h-screen`}>
         <Header 
           screen={screen} 
           setScreen={setScreen}
