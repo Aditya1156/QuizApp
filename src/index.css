@@ -77,6 +77,23 @@
     @apply bg-violet-600 rounded-full hover:bg-violet-500;
   }
 
+  /* Sidebar scrollbar - light theme */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-track-gray-100::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+  
+  .scrollbar-thumb-yellow-400::-webkit-scrollbar-thumb {
+    @apply bg-yellow-400 rounded-full;
+  }
+  
+  .scrollbar-thumb-yellow-400::-webkit-scrollbar-thumb:hover {
+    @apply bg-yellow-500;
+  }
+
   /* Text gradient */
   .text-gradient {
     @apply bg-gradient-to-r from-violet-400 via-purple-500 to-violet-400 bg-clip-text text-transparent;

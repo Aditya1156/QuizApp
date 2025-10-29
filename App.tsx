@@ -114,7 +114,7 @@ function AppContent() {
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col ${showSidebar ? 'lg:ml-72' : ''} relative z-10`}>
+      <div className={`flex-1 flex flex-col ${showSidebar ? 'lg:ml-72' : ''} relative z-10 min-h-screen`}>
         <Header 
           screen={screen} 
           setScreen={setScreen}

@@ -5,7 +5,7 @@ import { LinkedInIcon } from './icons/LinkedInIcon';
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-50 border-t border-gray-200 text-gray-600">
+    <footer className="relative z-10 bg-gray-50 border-t border-gray-200 text-gray-600 mt-auto">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Column 1: Brand */}

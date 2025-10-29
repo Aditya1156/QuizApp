@@ -52,11 +52,11 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 h-full w-80 bg-gradient-to-br from-white via-gray-50 to-white border-r-2 border-gray-200 z-50 transition-all duration-500 ease-out shadow-2xl ${
+        className={`fixed top-0 left-0 h-screen w-80 bg-gradient-to-br from-white via-gray-50 to-white border-r-2 border-gray-200 z-50 transition-all duration-500 ease-out shadow-2xl ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full max-h-screen">
           {/* Logo Section with Glassmorphism */}
           <div className="relative p-6 border-b-2 border-gray-200 bg-gradient-to-r from-yellow-50 via-white to-yellow-50 backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/5 via-transparent to-yellow-400/5"></div>
@@ -87,7 +87,7 @@ const Sidebar: React.FC<SidebarProps> = ({ screen, userRole, setScreen, isOpen, 
           </div>
 
           {/* Navigation Menu with Modern Cards */}
-          <nav className="flex-1 p-5 space-y-3 overflow-y-auto">
+          <nav className="flex-1 p-5 space-y-3 overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-400 scrollbar-track-gray-100">
             {menuItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = screen === item.id;
